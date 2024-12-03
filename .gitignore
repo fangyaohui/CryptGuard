@@ -14,6 +14,7 @@ HELP.md
 *.ipr
 rebel.xml
 
+
 .settings/
 .apt_generated
 .classpath
@@ -50,3 +51,4 @@ Thumbs.db
 Servers
 .metadata
 /.mvn/
+*.cmd
