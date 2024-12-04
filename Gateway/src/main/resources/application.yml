@@ -1,2 +1,9 @@
 server:
   port: 32618
+
+
+spring:
+  cloud:
+
+
+    gateway:
