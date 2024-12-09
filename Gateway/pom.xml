@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.1.5</version>
+        <version>3.0.5</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.example</groupId>
@@ -17,7 +17,7 @@
 
     <properties>
         <java.version>21</java.version>
-        <spring-boot.version>3.1.5</spring-boot.version>
+        <spring-boot.version>3.0.5</spring-boot.version>
         <spring-cloud.version>2022.0.0</spring-cloud.version>
         <spring-cloud-alibaba.version>2022.0.0.0-RC1</spring-cloud-alibaba.version>
     </properties>
@@ -46,11 +46,11 @@
         </dependency>
 
         <!--  引入CryptGuard包       -->
-        <dependency>
-            <groupId>com.example</groupId>
-            <artifactId>CryptGuard</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.example</groupId>-->
+<!--            <artifactId>CryptGuard</artifactId>-->
+<!--            <version>0.0.1-SNAPSHOT</version>-->
+<!--        </dependency>-->
 
         <!-- Spring Cloud Nacos Discovery -->
         <dependency>

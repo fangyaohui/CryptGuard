@@ -3,7 +3,23 @@ server:
 
 
 spring:
+  application:
+    name: gateway
+
   cloud:
-
-
     gateway:
+      routes:
+        - id: CryptGuardUseTest
+          uri: lb://CryptGuardUseTest
+          predicates:
+            - Path=/api/crypt/**
+          filters:
+            - StripPrefix=2
+
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+        username: nacos
+        password: nacos
+        namespace: dev
+

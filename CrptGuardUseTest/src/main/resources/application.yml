@@ -1,0 +1,14 @@
+server:
+  port: 32123
+
+spring:
+  application:
+    name: CryptGuardUseTest
+
+  cloud:
+    nacos:
+      discovery:
+        namespace: dev
+        username: nacos
+        password: nacos
+        server-addr: localhost:8848

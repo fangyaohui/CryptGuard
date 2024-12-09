@@ -2,12 +2,14 @@ package com.example.crptguardusetest;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 @SpringBootApplication
-public class CrptGuardUseTestApplication {
+@EnableDiscoveryClient
+public class CryptGuardUseTestApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(CrptGuardUseTestApplication.class, args);
+        SpringApplication.run(CryptGuardUseTestApplication.class, args);
     }
 
 }
