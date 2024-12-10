@@ -19,17 +19,6 @@ import reactor.core.publisher.Mono;
 @Component
 public class RequestDecryptTestFilter implements WebFilter {
 
-//    @Override
-//    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-//        log.info("RequestDecryptFilter running");
-//        return null;
-//    }
-
-//    @Override
-//    public int getOrder() {
-//        return Ordered.HIGHEST_PRECEDENCE; // 设置为最高优先级
-//    }
-
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         log.info("RequestDecryptTestFilter running");
