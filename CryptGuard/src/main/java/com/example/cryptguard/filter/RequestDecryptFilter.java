@@ -1,12 +1,11 @@
 package com.example.cryptguard.filter;
 
 
+import com.example.cryptguard.config.CryptGuardProperties;
+import com.example.cryptguard.utils.PathMatchUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.gateway.filter.GatewayFilterChain;
-import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
@@ -22,8 +21,14 @@ import java.net.URI;
  * @date 2024-12-04
  **/
 @Slf4j
-@Component
 public class RequestDecryptFilter implements WebFilter,Ordered {
+
+    private final CryptGuardProperties cryptGuardProperties;
+
+    public RequestDecryptFilter(CryptGuardProperties cryptGuardProperties){
+        this.cryptGuardProperties = cryptGuardProperties;
+        log.info("RequestDecryptFilter-CryptGuardProperties is : " + this.cryptGuardProperties.toString());
+    }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -31,7 +36,14 @@ public class RequestDecryptFilter implements WebFilter,Ordered {
 
         ServerHttpRequest request = exchange.getRequest();
         URI originalUri = request.getURI();
-        String decryptedPath = "/api/crypt/getTest";
+        String decryptedPath = originalUri.getPath();
+
+        // 判断解密之后的URL是否在用户配置的加密URL里，如果不在则不需要解密操作
+        if(!PathMatchUtils.isPathMatching(decryptedPath,cryptGuardProperties.getDeCryptUrls())){
+            log.info("RequestDecryptFilter 该URL无需解密操作：" + originalUri);
+            return chain.filter(exchange);
+        }
+
         String decryptedAuthority = originalUri.getScheme() + "://" +  originalUri.getAuthority() + "/api/crypt/getTest";
 
         log.info("Original URI: {}, Decrypted Path: {}", originalUri, decryptedPath);

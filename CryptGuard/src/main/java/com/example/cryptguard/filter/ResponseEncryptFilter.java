@@ -33,7 +33,7 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.O
  * @date 2024-12-04
  **/
 @Slf4j
-@Component
+//@Component
 public class ResponseEncryptFilter implements WebFilter, Ordered {
 
     @Override

@@ -23,3 +23,11 @@ spring:
         password: nacos
         namespace: dev
 
+custom:
+  crypt:
+    enable: true
+    privateKey: "fang"
+    deCryptUrls:
+      - /api/*
+    enCryptUrls:
+      - /api/*
