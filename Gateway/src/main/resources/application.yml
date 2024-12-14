@@ -28,6 +28,6 @@ custom:
     enable: true
     privateKey: "fang"
     deCryptUrls:
-      - /api/*
+      - /api/crypt/decrypt/*
     enCryptUrls:
       - /api/*

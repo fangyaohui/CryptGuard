@@ -48,6 +48,12 @@
             <optional>true</optional> <!-- 标记为可选，避免打包到最终应用 -->
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
 
     </dependencies>
 
