@@ -119,35 +119,45 @@ public class RequestDecryptFilter implements WebFilter, Ordered {
 
         // 检查请求是否为 JSON 格式的 POST 请求
         if (MediaType.APPLICATION_JSON.isCompatibleWith(request.getHeaders().getContentType())) {
+            // 如果请求体是 JSON 格式，收集请求体中的所有数据块
             return request.getBody()
-                    .collectList() // 收集请求体中的所有数据块
+                    .collectList()  // 将请求体中的多个数据块合并为一个 List
                     .flatMap(dataBuffers -> {
                         // 将 DataBuffer 转为字符串
-                        String body = dataBuffers.stream()
+                        String body = dataBuffers.stream()  // 遍历请求体中的所有 DataBuffer
                                 .map(buffer -> {
+                                    // 创建字节数组，存放当前 DataBuffer 的内容
                                     byte[] bytes = new byte[buffer.readableByteCount()];
+                                    // 读取 DataBuffer 中的内容到字节数组
                                     buffer.read(bytes);
+                                    // 将字节数组转为字符串，使用 UTF-8 编码
                                     return new String(bytes, StandardCharsets.UTF_8);
                                 })
+                                // 将所有 DataBuffer 转为单个字符串
                                 .collect(Collectors.joining());
 
                         // 解密请求体中的 encryptParam 参数
+                        // 假设请求体中包含一个加密的参数 encryptParam，该参数包含加密的 JSON 数据
                         Map<String, Object> decryptedBody = decryptJsonBody(body);
                         log.info("Decrypted POST Body: {}", decryptedBody);
 
                         // 构建新的请求体
                         return chain.filter(exchange.mutate()
+                                // 用解密后的请求体替换原始请求体
                                 .request(new ServerHttpRequestDecorator(request) {
                                     @Override
                                     public Flux<DataBuffer> getBody() {
                                         try {
-                                            // 将解密后的 Map 转为 JSON 字符串，并转换为 DataBuffer
+                                            // 将解密后的 Map 转为 JSON 字符串
                                             byte[] newBodyBytes = new ObjectMapper().writeValueAsBytes(decryptedBody);
+                                            // 将 JSON 字符串转换为 DataBuffer
                                             DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(newBodyBytes);
-                                            return Flux.just(buffer); // 返回新的请求体数据
+                                            // 返回新的 DataBuffer 作为请求体
+                                            return Flux.just(buffer); // 返回一个包含新请求体的 Flux
                                         } catch (Exception e) {
+                                            // 如果转换过程中出现异常，记录错误并返回错误
                                             log.error("Error while creating new request body", e);
-                                            return Flux.error(e); // 如果转换失败，则返回错误
+                                            return Flux.error(e); // 返回错误的 Flux
                                         }
                                     }
                                 }).build());
