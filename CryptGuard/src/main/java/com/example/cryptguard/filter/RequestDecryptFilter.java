@@ -131,7 +131,7 @@ public class RequestDecryptFilter implements WebFilter, Ordered {
                                 })
                                 .collect(Collectors.joining());
 
-                        // 解密请求体
+                        // 解密请求体中的 encryptParam 参数
                         Map<String, Object> decryptedBody = decryptJsonBody(body);
                         log.info("Decrypted POST Body: {}", decryptedBody);
 
@@ -160,6 +160,7 @@ public class RequestDecryptFilter implements WebFilter, Ordered {
 
     /**
      * 解密 JSON 格式的请求体
+     * 假设请求体中包含 encryptParam 字段，字段值是整个加密的请求参数体
      */
     private Map<String, Object> decryptJsonBody(String body) {
         try {
@@ -167,19 +168,20 @@ public class RequestDecryptFilter implements WebFilter, Ordered {
             ObjectMapper objectMapper = new ObjectMapper();
             Map<String, Object> bodyMap = objectMapper.readValue(body, new TypeReference<Map<String, Object>>() {});
 
-            // 解密 JSON 中的每一个字段
-            Map<String, Object> decryptedBody = new LinkedHashMap<>();
-            for (Map.Entry<String, Object> entry : bodyMap.entrySet()) {
-                String key = entry.getKey();
-                Object value = entry.getValue();
-                if (value instanceof String) {
-                    decryptedBody.put(key, AESUtils.decode((String) value, cryptGuardProperties.getPrivateKey()));
-                } else {
-                    decryptedBody.put(key, value); // 对非字符串类型字段不做处理
-                }
-            }
+            // 从请求体中提取加密的参数 encryptParam
+            String encryptedParam = (String) bodyMap.get("encryptParam");
 
-            return decryptedBody;
+            // 解密 encryptParam 参数
+            String decryptedParam = AESUtils.decode(encryptedParam, cryptGuardProperties.getPrivateKey());
+
+            // 将解密后的参数重新放入 Map
+            ObjectMapper paramMapper = new ObjectMapper();
+            Map<String, Object> decryptedParamMap = paramMapper.readValue(decryptedParam, new TypeReference<Map<String, Object>>() {});
+
+            log.info("Decrypted encryptParam: {}", decryptedParamMap);
+
+            // 返回解密后的参数体
+            return decryptedParamMap;
         } catch (Exception e) {
             log.error("Failed to decrypt JSON body", e);
             return new LinkedHashMap<>(); // 返回空的 Map，避免请求处理失败
@@ -192,3 +194,4 @@ public class RequestDecryptFilter implements WebFilter, Ordered {
         return Ordered.HIGHEST_PRECEDENCE;
     }
 }
+
