@@ -30,4 +30,4 @@ custom:
     deCryptUrls:
       - /api/crypt/decrypt/*
     enCryptUrls:
-      - /api/*
+      - /api/crypt/decrypt/*

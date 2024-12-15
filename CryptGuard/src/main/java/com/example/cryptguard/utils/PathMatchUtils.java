@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 public class PathMatchUtils {
 
     // 将用户配置的URL模式转换为正则表达式
-    public static String convertToRegexPattern(String urlPattern) {
+    private static String convertToRegexPattern(String urlPattern) {
         // 转换 /api/* 为 /api/.* 以适应正则表达式
         return urlPattern.replace("/*", "/.*");
     }

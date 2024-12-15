@@ -29,9 +29,9 @@ public class TestController {
      * @Description URL&参数需要解密Post请求
      */
     @PostMapping("/decrypt/postRequest")
-    public String decryptPostRequest(@RequestBody UserInfoPO userInfoPO){
+    public UserInfoPO decryptPostRequest(@RequestBody UserInfoPO userInfoPO){
         log.info("decryptPostRequest params is {}",userInfoPO.toString());
-        return "decryptPostRequest";
+        return userInfoPO;
     }
 
     /***

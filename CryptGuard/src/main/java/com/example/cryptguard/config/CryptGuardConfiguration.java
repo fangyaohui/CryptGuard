@@ -1,6 +1,7 @@
 package com.example.cryptguard.config;
 
 import com.example.cryptguard.filter.RequestDecryptFilter;
+import com.example.cryptguard.filter.ResponseEncryptFilter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -30,6 +31,13 @@ public class CryptGuardConfiguration {
         log.info("CryptGuardConfiguration RequestDecryptFilter is running");
         log.info("CryptGuardProperties is :" + cryptGuardProperties.toString());
         return new RequestDecryptFilter(cryptGuardProperties);
+    }
+
+    @Bean
+    public ResponseEncryptFilter responseEncryptFilter(){
+        log.info("CryptGuardConfiguration ResponseEncryptFilter is running");
+        log.info("CryptGuardProperties is :" + cryptGuardProperties.toString());
+        return new ResponseEncryptFilter(cryptGuardProperties);
     }
 
 }

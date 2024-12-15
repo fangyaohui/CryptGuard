@@ -1,5 +1,8 @@
 package com.example.cryptguard.filter;
 
+import com.example.cryptguard.config.CryptGuardProperties;
+import com.example.cryptguard.utils.AESUtils;
+import com.example.cryptguard.utils.PathMatchUtils;
 import io.micrometer.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
@@ -32,13 +35,12 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.O
  * @date 2024-12-04
  **/
 @Slf4j
-//@Component
 public class ResponseEncryptFilter implements WebFilter, Ordered {
 
-    @Override
-    public int getOrder() {
-        // 设置拦截器优先级
-        return Ordered.HIGHEST_PRECEDENCE;
+    private final CryptGuardProperties cryptGuardProperties;
+
+    public ResponseEncryptFilter(CryptGuardProperties cryptGuardProperties){
+        this.cryptGuardProperties = cryptGuardProperties;
     }
 
     @Override
@@ -46,6 +48,11 @@ public class ResponseEncryptFilter implements WebFilter, Ordered {
         log.info("ResponseEncryptFilter running");
 
         ServerHttpResponse originalResponse = exchange.getResponse();
+        String path = exchange.getRequest().getURI().getPath();
+        if(!PathMatchUtils.isPathMatching(path,cryptGuardProperties.getEnCryptUrls())){
+            return chain.filter(exchange);
+        }
+
         /*
          从原始的 ServerHttpResponse 对象中获取一个 DataBufferFactory 实例，来处理响应体的数据缓冲区。
          bufferFactory: DataBufferFactory 是一个工厂接口，用于创建 DataBuffer 对象。DataBuffer 是一种表示数据缓冲区的对象，
@@ -102,9 +109,10 @@ public class ResponseEncryptFilter implements WebFilter, Ordered {
 
                             // 合并所有部分的响应体内容
                             String responseData = String.join("", list); // 将各部分数据按空字符串拼接
-
+                            log.info("ResponseEncryptFilter original response is : {}",responseData);
                             // 修改响应体内容，这里直接将响应内容替换为 "fang"
-                            responseData = "fang";
+                            responseData = AESUtils.encode(responseData,cryptGuardProperties.getPrivateKey());
+                            log.info("ResponseEncryptFilter encrypt response is : {}",responseData);
 
                             // 将修改后的响应体转换为字节数组并封装为 DataBuffer
                             byte[] modifiedContent = responseData.getBytes(StandardCharsets.UTF_8);
@@ -139,5 +147,11 @@ public class ResponseEncryptFilter implements WebFilter, Ordered {
         PrintWriter pw = new PrintWriter(sw);
         throwable.printStackTrace(pw);
         return sw.toString();
+    }
+
+    @Override
+    public int getOrder() {
+        // 设置拦截器优先级
+        return Ordered.HIGHEST_PRECEDENCE;
     }
 }
