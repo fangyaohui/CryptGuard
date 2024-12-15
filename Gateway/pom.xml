@@ -45,8 +45,8 @@
 
         <!--  引入CryptGuard包       -->
         <dependency>
-            <groupId>com.example</groupId>
-            <artifactId>CryptGuardGateWay</artifactId>
+            <groupId>com.crypt</groupId>
+            <artifactId>crypt-guard-gateWay</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
