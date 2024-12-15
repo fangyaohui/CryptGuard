@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.example</groupId>
-    <artifactId>CryptGuard</artifactId>
+    <artifactId>CryptGuardGateWay</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>CryptGuard</name>
-    <description>CryptGuard</description>
+    <name>CryptGuardGateWay</name>
+    <description>CryptGuardGateWay</description>
     <url/>
 
 
