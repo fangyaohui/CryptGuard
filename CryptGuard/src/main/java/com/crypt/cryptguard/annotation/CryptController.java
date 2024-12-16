@@ -14,6 +14,5 @@ import java.lang.annotation.*;
 @DecryptController
 @EncryptController
 public @interface CryptController {
-    boolean decryptUrl() default true; // 是否对 URL 解密
-    boolean decryptParams() default true; // 是否对参数解密
+
 }

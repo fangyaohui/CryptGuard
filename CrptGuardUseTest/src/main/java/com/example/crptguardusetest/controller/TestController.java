@@ -1,5 +1,6 @@
 package com.example.crptguardusetest.controller;
 
+import com.crypt.cryptguard.annotation.DecryptRequest;
 import com.example.crptguardusetest.Entity.UserInfoPO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,6 +32,13 @@ public class TestController {
     @PostMapping("/decrypt/postRequest")
     public UserInfoPO decryptPostRequest(@RequestBody UserInfoPO userInfoPO){
         log.info("decryptPostRequest params is {}",userInfoPO.toString());
+        return userInfoPO;
+    }
+
+    @PostMapping("/decrypt/annotation/postRequest")
+    @DecryptRequest()
+    public UserInfoPO decryptAnnotationPostRequest(@RequestBody UserInfoPO userInfoPO){
+        log.info("decryptAnnotationPostRequest params is {}",userInfoPO.toString());
         return userInfoPO;
     }
 

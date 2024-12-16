@@ -8,7 +8,7 @@ import java.lang.annotation.*;
  * @Author yaoHui
  * @date 2024-12-15
  **/
-@Target(value = ElementType.TYPE)
+@Target({ElementType.METHOD,ElementType.ANNOTATION_TYPE})
 @Retention(value = RetentionPolicy.RUNTIME)
 @Documented
 public @interface EncryptResponse {

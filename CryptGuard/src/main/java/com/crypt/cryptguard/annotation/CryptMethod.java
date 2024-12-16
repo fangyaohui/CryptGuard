@@ -8,12 +8,11 @@ import java.lang.annotation.*;
  * @Author yaoHui
  * @date 2024-12-15
  **/
-@Target(value = ElementType.TYPE)
+@Target(value = ElementType.METHOD)
 @Retention(value = RetentionPolicy.RUNTIME)
 @Documented
 @DecryptRequest
 @EncryptResponse
 public @interface CryptMethod {
-    boolean decryptUrl() default true; // 是否对 URL 解密
-    boolean decryptParams() default true; // 是否对参数解密
+
 }

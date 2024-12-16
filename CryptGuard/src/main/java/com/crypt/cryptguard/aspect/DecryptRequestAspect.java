@@ -1,6 +1,12 @@
 package com.crypt.cryptguard.aspect;
 
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.stereotype.Component;
 
 /**
@@ -9,7 +15,23 @@ import org.springframework.stereotype.Component;
  * @Author yaoHui
  * @date 2024-12-15
  **/
+@Slf4j
 @Aspect
 @Component
 public class DecryptRequestAspect {
+
+    @Pointcut("@annotation(com.crypt.cryptguard.annotation.DecryptRequest)")
+    public void decryptRequestPointCut(){
+
+    }
+
+    @Before("decryptRequestPointCut()")
+    public void doDecryptRequestPointCut(JoinPoint joinPoint) throws Throwable {
+
+        Object[] args = joinPoint.getArgs();
+
+        log.info("doDecryptRequestPointCut is running");
+    }
+
+
 }
