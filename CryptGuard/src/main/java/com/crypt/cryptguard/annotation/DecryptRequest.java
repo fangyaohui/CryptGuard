@@ -12,5 +12,5 @@ import java.lang.annotation.*;
 @Retention(value = RetentionPolicy.RUNTIME)
 @Documented
 public @interface DecryptRequest {
-
+    boolean allDecrypt() default true; // 是否解密整个参数
 }

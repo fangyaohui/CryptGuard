@@ -1,10 +1,11 @@
 package com.crypt.cryptguard.config;
 
 import com.crypt.cryptguard.aspect.DecryptRequestAspect;
+import com.crypt.cryptguard.filter.RequestCachingFilter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 /**
  * @FileName CryptGuardAutoConfiguration
@@ -14,12 +15,20 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
  **/
 @Slf4j
 @Configuration
-//@EnableAspectJAutoProxy
 public class CryptGuardAutoConfiguration {
 
     @Bean
     public DecryptRequestAspect decryptRequestAspect(){
         log.info("decryptRequestAspect is running");
         return new DecryptRequestAspect();
+    }
+
+    @Bean
+    public FilterRegistrationBean<RequestCachingFilter> requestCachingFilterFilterRegistrationBean(){
+        FilterRegistrationBean<RequestCachingFilter> requestCachingFilterFilterRegistrationBean =
+                new FilterRegistrationBean<>();
+        requestCachingFilterFilterRegistrationBean.setFilter(new RequestCachingFilter());
+        requestCachingFilterFilterRegistrationBean.addUrlPatterns("/*");
+        return requestCachingFilterFilterRegistrationBean;
     }
 }
