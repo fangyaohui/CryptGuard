@@ -1,24 +1,23 @@
 package com.crypt.cryptguard.aspect;
 
-import jakarta.servlet.ServletRequest;
+import com.crypt.cryptguard.utils.AESUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import org.springframework.web.servlet.support.RequestContextUtils;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 
-import java.io.BufferedReader;
-import java.util.stream.Collectors;
+import java.lang.reflect.Field;
+import java.util.Map;
 
 /**
  * @FileName DecryptRequestAspect
@@ -30,6 +29,10 @@ import java.util.stream.Collectors;
 @Aspect
 @Component
 public class DecryptRequestAspect {
+
+    private final static ObjectMapper objectMapper = new ObjectMapper();
+
+    private final static String privateKey = "fang";
 
     @Pointcut("@annotation(com.crypt.cryptguard.annotation.DecryptRequest)")
     public void decryptRequestPointCut(){
@@ -55,21 +58,52 @@ public class DecryptRequestAspect {
         }
 
         ContentCachingRequestWrapper wrapperRequest = (ContentCachingRequestWrapper) httpServletRequest;
-
         String originalBody = new String(wrapperRequest.getContentAsByteArray(), wrapperRequest.getCharacterEncoding());
-
-//        // 读取原始请求体
-//        String requestBody = new BufferedReader(request.getReader())
-//                .lines()
-//                .collect(Collectors.joining(System.lineSeparator()));
-
-        log.info("Original Request Body:{}",originalBody);
+        Map<String,String> paramsMap = objectMapper.readValue(originalBody,Map.class);
+        String decryptedParams = AESUtils.decode(paramsMap.getOrDefault("encryptParam",""),privateKey);
+        Map<String,String> decryptedParamsMap = objectMapper.readValue(decryptedParams,Map.class);
+        log.info("doDecryptRequestPointCut decryptedObject is {}",decryptedParamsMap);
 
         Object[] args = joinPoint.getArgs();
+        Class<?> targetObject = args[0].getClass();  // 获取第一个参数的实际类型
+        Field[] fields = targetObject.getDeclaredFields();
+        for (Field field : fields) {
+            field.setAccessible(true);
+            String fieldName = field.getName();
+            String fieldValue = (String) decryptedParamsMap.getOrDefault(fieldName, null);
+
+            if (fieldValue != null) {
+                Class<?> fieldType = field.getType();
+
+                // 检查是否是String类型，如果是Class类型则进行转换
+                if (fieldType == String.class) {
+                    // 如果fieldValue是Class类型，避免直接注入
+                    field.set(targetObject, new String(fieldValue));
+                } else if (fieldType == Integer.class || fieldType == int.class) {
+                    try {
+                        field.set(targetObject, Integer.valueOf(fieldValue));
+                    } catch (NumberFormatException e) {
+                        log.error("Failed to convert value to Integer for field: {}", fieldName);
+                    }
+                } else if (fieldType == Double.class || fieldType == double.class) {
+                    try {
+                        field.set(targetObject, Double.valueOf(fieldValue));
+                    } catch (NumberFormatException e) {
+                        log.error("Failed to convert value to Double for field: {}", fieldName);
+                    }
+                } else if (fieldType == Boolean.class || fieldType == boolean.class) {
+                    field.set(targetObject, Boolean.valueOf(fieldValue));
+                } else if (fieldType == Long.class || fieldType == long.class) {
+                    try {
+                        field.set(targetObject, Long.valueOf(fieldValue));
+                    } catch (NumberFormatException e) {
+                        log.error("Failed to convert value to Long for field: {}", fieldName);
+                    }
+                }
+            }
+        }
+
 
         log.info("doDecryptRequestPointCut is running");
-
     }
-
-
 }
