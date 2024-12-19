@@ -1,5 +1,6 @@
 package com.crypt.cryptguard.aspect;
 
+import com.crypt.cryptguard.annotation.DecryptRequest;
 import com.crypt.cryptguard.utils.AESUtils; // 导入AES解密工具类
 import com.fasterxml.jackson.databind.ObjectMapper; // 导入ObjectMapper用于JSON与Java对象之间的转换
 import jakarta.servlet.http.HttpServletRequest; // 导入HttpServletRequest类，用于访问HTTP请求
@@ -9,6 +10,7 @@ import org.aspectj.lang.JoinPoint; // 导入JoinPoint，用于获取方法信息
 import org.aspectj.lang.annotation.Aspect; // 导入Aspect注解，表示这是一个切面
 import org.aspectj.lang.annotation.Before; // 导入Before注解，表示在方法执行前运行
 import org.aspectj.lang.annotation.Pointcut; // 导入Pointcut注解，用于定义切点
+import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component; // 导入Component注解，将该类标记为Spring组件
 import org.springframework.util.ObjectUtils; // 导入ObjectUtils类，用于检查空值
 import org.springframework.web.context.request.RequestContextHolder; // 导入RequestContextHolder，用于访问请求上下文
@@ -69,10 +71,24 @@ public class DecryptRequestAspect {
         String originalBody = new String(wrapperRequest.getContentAsByteArray(), wrapperRequest.getCharacterEncoding());
 
         // 将原始请求体转为Map<String, String>
-        Map<String, String> paramsMap = objectMapper.readValue(originalBody, Map.class);
+        Map<String, Object> paramsMap = objectMapper.readValue(originalBody, Map.class);
+
+        MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
+        DecryptRequest decryptRequest = methodSignature.getMethod().getAnnotation(DecryptRequest.class);
+        String decryptedParams = originalBody;
+        if(decryptRequest.allParamsDecrypt()){
+            decryptedParams = AESUtils.decode((String) paramsMap.getOrDefault("encryptParam", ""), privateKey);
+        }else if(decryptRequest.decryptValuesOnly()){
+            for(Map.Entry<String,Object> entry : paramsMap.entrySet()){
+                Object param = entry.getValue();
+            }
+            decryptedParams = paramsMap.toString();
+        }else{
+
+        }
 
         // 解密请求中的"encryptParam"字段，使用AES解密
-        String decryptedParams = AESUtils.decode(paramsMap.getOrDefault("encryptParam", ""), privateKey);
+
 
         // 将解密后的字符串转换为Map<String, Object>类型
         Map<String, Object> decryptedParamsMap = objectMapper.readValue(decryptedParams, Map.class);

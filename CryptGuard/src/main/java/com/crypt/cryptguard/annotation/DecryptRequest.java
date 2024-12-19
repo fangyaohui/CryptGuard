@@ -8,9 +8,18 @@ import java.lang.annotation.*;
  * @Author yaoHui
  * @date 2024-12-15
  **/
-@Target({ElementType.METHOD,ElementType.ANNOTATION_TYPE})
+@Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 @Retention(value = RetentionPolicy.RUNTIME)
 @Documented
 public @interface DecryptRequest {
-    boolean allDecrypt() default true; // 是否解密整个参数
+
+    // 是否解密整个参数（即包括所有字段的值）
+    boolean allParamsDecrypt() default true;
+
+    // 是否只解密参数值，不解密键名
+    boolean decryptValuesOnly() default false;
+
+    // 是否只解密部分参数值
+    boolean partialParamsDecrypt() default false;
 }
+

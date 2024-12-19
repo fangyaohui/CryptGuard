@@ -42,6 +42,13 @@ public class TestController {
         return userInfoPO;
     }
 
+    @PostMapping("/decrypt/annotation/decryptValuesOnlyRequest")
+    @DecryptRequest(decryptValuesOnly = true)
+    public UserInfoPO decryptValuesOnlyRequest(@RequestBody UserInfoPO userInfoPO){
+        log.info("decryptValuesOnlyRequest params is {}",userInfoPO.toString());
+        return userInfoPO;
+    }
+
     /***
      * @Author yaoHui
      * @Date 2024/12/14
