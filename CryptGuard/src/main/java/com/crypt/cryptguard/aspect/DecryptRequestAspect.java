@@ -7,6 +7,8 @@ import jakarta.servlet.http.HttpServletRequest; // 导入HttpServletRequest类�
 import jakarta.servlet.http.HttpServletRequestWrapper; // 导入HttpServletRequestWrapper，用于包装请求
 import lombok.extern.slf4j.Slf4j; // 导入日志记录工具
 import org.aspectj.lang.JoinPoint; // 导入JoinPoint，用于获取方法信息
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect; // 导入Aspect注解，表示这是一个切面
 import org.aspectj.lang.annotation.Before; // 导入Before注解，表示在方法执行前运行
 import org.aspectj.lang.annotation.Pointcut; // 导入Pointcut注解，用于定义切点
@@ -43,9 +45,34 @@ public class DecryptRequestAspect {
         // 切点方法体为空，表示切点的定义，目标方法会根据此注解被拦截
     }
 
+    @Around("decryptRequestPointCut()")
+    public Object handleDecryptRequestPointCut(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
+
+        // 获取当前请求的属性
+        ServletRequestAttributes servletRequestAttributes =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+
+        // 如果没有请求属性，则返回
+        if(ObjectUtils.isEmpty(servletRequestAttributes)){
+            log.info("decryptRequestPointCut ServletRequestAttributes is null");
+            return null;
+        }
+
+        // 获取HttpServletRequest对象
+        HttpServletRequest httpServletRequest = servletRequestAttributes.getRequest();
+
+        // 检查请求是否被包装为ContentCachingRequestWrapper类型
+        if(!(httpServletRequest instanceof HttpServletRequestWrapper)){
+            log.info("Request is not wrapped in ContentCachingRequestWrapper");
+            return null;
+        }
+
+        return proceedingJoinPoint.proceed();
+    }
+
     // 定义一个Before通知，表示在目标方法执行前进行解密处理
-    @Before("decryptRequestPointCut()")
-    public void handleDecryptRequestPointCut(JoinPoint joinPoint) throws Throwable {
+//    @Before("decryptRequestPointCut()")
+    public void handleDecryptRequestPointCutBefore(JoinPoint joinPoint) throws Throwable {
 
         // 获取当前请求的属性
         ServletRequestAttributes servletRequestAttributes =
