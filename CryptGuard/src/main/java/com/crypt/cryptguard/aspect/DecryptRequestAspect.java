@@ -9,7 +9,6 @@ import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
-import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -61,48 +60,34 @@ public class DecryptRequestAspect {
         String originalBody = new String(wrapperRequest.getContentAsByteArray(), wrapperRequest.getCharacterEncoding());
         Map<String,String> paramsMap = objectMapper.readValue(originalBody,Map.class);
         String decryptedParams = AESUtils.decode(paramsMap.getOrDefault("encryptParam",""),privateKey);
-        Map<String,String> decryptedParamsMap = objectMapper.readValue(decryptedParams,Map.class);
+        Map<String,Object> decryptedParamsMap = objectMapper.readValue(decryptedParams, Map.class);
         log.info("doDecryptRequestPointCut decryptedObject is {}",decryptedParamsMap);
 
         Object[] args = joinPoint.getArgs();
-        Class<?> targetObject = args[0].getClass();  // 获取第一个参数的实际类型
-        Field[] fields = targetObject.getDeclaredFields();
+        Object targetObject = args[0]; // 获取第一个参数实例
+        Class<?> targetClass = targetObject.getClass();
+        Field[] fields = targetClass.getDeclaredFields();
         for (Field field : fields) {
             field.setAccessible(true);
             String fieldName = field.getName();
-            String fieldValue = (String) decryptedParamsMap.getOrDefault(fieldName, null);
+            Object fieldValue =  decryptedParamsMap.getOrDefault(fieldName, null);
 
             if (fieldValue != null) {
                 Class<?> fieldType = field.getType();
-
-                // 检查是否是String类型，如果是Class类型则进行转换
-                if (fieldType == String.class) {
-                    // 如果fieldValue是Class类型，避免直接注入
-                    field.set(targetObject, new String(fieldValue));
-                } else if (fieldType == Integer.class || fieldType == int.class) {
-                    try {
-                        field.set(targetObject, Integer.valueOf(fieldValue));
-                    } catch (NumberFormatException e) {
-                        log.error("Failed to convert value to Integer for field: {}", fieldName);
+                try{
+                    if(fieldType == float.class){
+                        field.setFloat(targetObject,Float.parseFloat(fieldValue.toString()));
+                    }else if (fieldType == Float.class){
+                        field.set(targetObject,((Double)fieldValue).floatValue());
+                    }else{
+                        Object fieldObject = objectMapper.convertValue(fieldValue,fieldType);
+                        field.set(targetObject,fieldObject);
                     }
-                } else if (fieldType == Double.class || fieldType == double.class) {
-                    try {
-                        field.set(targetObject, Double.valueOf(fieldValue));
-                    } catch (NumberFormatException e) {
-                        log.error("Failed to convert value to Double for field: {}", fieldName);
-                    }
-                } else if (fieldType == Boolean.class || fieldType == boolean.class) {
-                    field.set(targetObject, Boolean.valueOf(fieldValue));
-                } else if (fieldType == Long.class || fieldType == long.class) {
-                    try {
-                        field.set(targetObject, Long.valueOf(fieldValue));
-                    } catch (NumberFormatException e) {
-                        log.error("Failed to convert value to Long for field: {}", fieldName);
-                    }
+                }catch (Exception e){
+                    log.error("Failed to convert value to {} for field: {},exception is {}",fieldType, fieldName,e);
                 }
             }
         }
-
 
         log.info("doDecryptRequestPointCut is running");
     }

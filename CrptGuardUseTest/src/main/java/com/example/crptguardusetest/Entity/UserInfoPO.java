@@ -19,4 +19,22 @@ public class UserInfoPO {
 
     private List<String> stringList;
 
+    private Long paramLongObject;
+
+    private Integer paramIntegerObject;
+
+    private long paramLong;
+
+    private int paramInt;
+
+    private Double paramDoubleObject;
+
+    private double paramDouble;
+
+    private float paramFloat;
+
+    private Float paramFloatObject;
+
+    private RolePO rolePO;
+
 }
