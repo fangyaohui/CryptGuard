@@ -1,10 +1,8 @@
 package com.crypt.cryptguard.config;
 
-import com.crypt.cryptguard.resolver.DecryptArgumentResolver;
+import com.crypt.cryptguard.resolver.CustomMappingJackson2HttpMessageConverter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
@@ -18,14 +16,12 @@ import java.util.List;
 @Slf4j
 public class WebConfig implements WebMvcConfigurer {
 
-    @Autowired
-    public DecryptArgumentResolver decryptArgumentResolver;
-
     @Override
-    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
-        log.info("addArgumentResolvers is running");
-//        DecryptArgumentResolver decryptArgumentResolver = new DecryptArgumentResolver();
-        resolvers.add(decryptArgumentResolver);
-        log.info("Registered Argument Resolvers: " + resolvers);
+    public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
+        // 创建自定义的消息转换器
+        CustomMappingJackson2HttpMessageConverter customConverter = new CustomMappingJackson2HttpMessageConverter();
+
+        // 将自定义转换器添加到 Spring 的消息转换器列表中
+        converters.add(0,customConverter);
     }
 }

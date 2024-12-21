@@ -2,7 +2,6 @@ package com.crypt.cryptguard.config;
 
 import com.crypt.cryptguard.aspect.DecryptRequestAspect;
 import com.crypt.cryptguard.filter.RequestCachingFilter;
-import com.crypt.cryptguard.resolver.DecryptArgumentResolver;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -38,9 +37,9 @@ public class CryptGuardAutoConfiguration {
 //        return new DecryptArgumentResolver();
 //    }
 //
-//    @Bean
-//    public WebConfig webConfig(){
-//        log.info("WebConfig");
-//        return new WebConfig();
-//    }
+    @Bean
+    public WebConfig webConfig(){
+        log.info("WebConfig");
+        return new WebConfig();
+    }
 }

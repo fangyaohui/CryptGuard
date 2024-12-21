@@ -1,5 +1,6 @@
 package com.example.crptguardusetest.Entity;
 
+import com.crypt.cryptguard.annotation.DecryptTransient;
 import lombok.Data;
 
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.List;
  * @date 2024-12-14
  **/
 @Data
+@DecryptTransient
 public class UserInfoPO {
 
     private String username;
