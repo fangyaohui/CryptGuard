@@ -52,31 +52,6 @@ public class DecryptRequestAspect {
         // 切点方法体为空，表示切点的定义，目标方法会根据此注解被拦截
     }
 
-//    @Around("decryptRequestPointCut()")
-//    public Object handleDecryptRequestPointCut(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
-//
-//        // 获取当前请求的属性
-//        ServletRequestAttributes servletRequestAttributes =
-//                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-//
-//        // 如果没有请求属性，则返回
-//        if(ObjectUtils.isEmpty(servletRequestAttributes)){
-//            log.info("decryptRequestPointCut ServletRequestAttributes is null");
-//            return null;
-//        }
-//
-//        // 获取HttpServletRequest对象
-//        HttpServletRequest httpServletRequest = servletRequestAttributes.getRequest();
-//
-//        // 检查请求是否被包装为ContentCachingRequestWrapper类型
-//        if(!(httpServletRequest instanceof HttpServletRequestWrapper)){
-//            log.info("Request is not wrapped in ContentCachingRequestWrapper");
-//            return null;
-//        }
-//
-//        return proceedingJoinPoint.proceed();
-//    }
-
     // 定义一个Before通知，表示在目标方法执行前进行解密处理
     @Before("decryptRequestPointCut()")
     public void handleDecryptRequestPointCutBefore(JoinPoint joinPoint) throws Throwable {
@@ -127,24 +102,6 @@ public class DecryptRequestAspect {
         }else{
 
         }
-
-//        if(decryptRequest.allParamsDecrypt()){
-//            decryptedParams = AESUtils.decode((String) paramsMap.getOrDefault("encryptParam", ""), privateKey);
-//        }else if(decryptRequest.decryptValuesOnly()){
-//            for(Map.Entry<String,Object> entry : paramsMap.entrySet()){
-//                Object param = entry.getValue();
-//            }
-//            decryptedParams = paramsMap.toString();
-//        }else{
-//
-//        }
-
-        // 解密请求中的"encryptParam"字段，使用AES解密
-
-
-        // 将解密后的字符串转换为Map<String, Object>类型
-//        Map<String, Object> decryptedParamsMap = objectMapper.readValue(decryptedParams, Map.class);
-//        log.info("doDecryptRequestPointCut decryptedObject is {}", decryptedParamsMap);
 
         // 打印日志表示解密操作完成
         log.info("doDecryptRequestPointCut is running");
