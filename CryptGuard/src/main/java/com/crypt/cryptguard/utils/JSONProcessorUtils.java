@@ -145,19 +145,12 @@ public class JSONProcessorUtils {
                         if (objectNode.has(fieldName)) {
                             JsonNode listNode = objectNode.get(fieldName);
                             if (listNode.isArray()) {
-//                                ArrayNode newArrayNode = objectNode.get(fieldName + cryptString);
                                 for (JsonNode itemNode : listNode) {
                                     if (itemNode.isObject()) {
-//                                        ObjectNode newItemNode = (ObjectNode) itemNode.deepCopy();
                                         // 根据条件调整 isAllDecrypt 值向下递归
                                         processNode(itemNode, genericClass, shouldDecrypt);
-//                                        newArrayNode.add(newItemNode);
                                     }
-//                                    else {
-//                                        newArrayNode.add(itemNode);
-//                                    }
                                 }
-//                                objectNode.remove(fieldName);
                             } else {
                                 log.warn("字段 '{}' 不是JSON数组.", fieldName);
                             }

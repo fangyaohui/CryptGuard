@@ -91,17 +91,17 @@ public class DecryptRequestAspect {
         Class<?> targetClass = targetObject.getClass();
         Field[] fields = targetClass.getDeclaredFields(); // 获取所有字段（包括私有字段）
 
-        if(decryptRequest.partialParamsDecrypt()){
-            // 部分属性进行解密&注入
-            paramsMap = decryptOriginalParams(paramsMap,targetClass,false);
-            invokeFieldValue(fields,targetObject,paramsMap,false);
-        }else if(decryptRequest.decryptValuesOnly()){
-            // 所有属性进行解密&注入
-            paramsMap = decryptOriginalParams(paramsMap,targetClass,true);
-            invokeFieldValue(fields,targetObject,paramsMap,true);
-        }else{
-
-        }
+//        if(decryptRequest.partialParamsDecrypt()){
+//            // 部分属性进行解密&注入
+//            paramsMap = decryptOriginalParams(paramsMap,targetClass,false);
+//            invokeFieldValue(fields,targetObject,paramsMap,false);
+//        }else if(decryptRequest.decryptValuesOnly()){
+//            // 所有属性进行解密&注入
+//            paramsMap = decryptOriginalParams(paramsMap,targetClass,true);
+//            invokeFieldValue(fields,targetObject,paramsMap,true);
+//        }else{
+//
+//        }
 
         // 打印日志表示解密操作完成
         log.info("doDecryptRequestPointCut is running");

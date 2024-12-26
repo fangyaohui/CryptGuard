@@ -1,6 +1,7 @@
 package com.crypt.cryptguard.resolver;
 
 import com.crypt.cryptguard.annotation.DecryptRequest;
+import com.crypt.cryptguard.utils.JSONProcessorUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -63,34 +64,36 @@ public class CustomMappingJackson2HttpMessageConverter extends MappingJackson2Ht
             return super.read(type, contextClass, inputMessage);
         }
 
+        if(annotation.allParamsDecrypt()){
+            return super.read(type, contextClass, inputMessage);
+        }
+
         try {
             // 获取请求体 InputStream
             InputStream inputStream = inputMessage.getBody();
 
             // 将 InputStream 转换为 String
             String body = StreamUtils.copyToString(inputStream, StandardCharsets.UTF_8);
-
-            // 使用 ObjectMapper 解析 JSON 字符串
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(body);
-
-            // 获取目标类的字段信息
+//            // 获取目标类的字段信息
             String typeName = type.getTypeName();
             Class<?> clazz = Class.forName(typeName);
-            Field[] fields = clazz.getDeclaredFields();
 
-            // 根据注解配置，对指定字段进行解密或移除
-            if (annotation.decryptValuesOnly()) {
-                for (Field field : fields) {
-                    String fieldName = field.getName();
-                    if (rootNode.has(fieldName)) {
-                        // 移除字段（示例逻辑，可替换为实际解密操作）
-                        ((ObjectNode) rootNode).remove(fieldName);
-                    }
-                }
-                // 将修改后的 JSON 转换回字符串
-                body = objectMapper.writeValueAsString(rootNode);
-            }
+
+            body = JSONProcessorUtils.processJson(body, clazz);
+            log.info("JSONProcessorUtils process body is {}", body);
+//
+//            // 根据注解配置，对指定字段进行解密或移除
+//            if (annotation.decryptValuesOnly()) {
+//                for (Field field : fields) {
+//                    String fieldName = field.getName();
+//                    if (rootNode.has(fieldName)) {
+//                        // 移除字段（示例逻辑，可替换为实际解密操作）
+//                        ((ObjectNode) rootNode).remove(fieldName);
+//                    }
+//                }
+//                // 将修改后的 JSON 转换回字符串
+//                body = objectMapper.writeValueAsString(rootNode);
+//            }
 
             // 使用修改后的 JSON 重新构建 InputStream
             ByteArrayInputStream updatedInputStream = new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8));
