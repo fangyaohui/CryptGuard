@@ -15,12 +15,13 @@ import java.util.Map;
 @Data
 public class ComplexUser {
 
-//    private String name;
-//    @DecryptTransient
-//    private String email;
-//    private Address address;
-//    @DecryptTransient
-//    private List<Account> accounts;
-    @DecryptTransient
+    private String name;
+
+    private String email;
+
+    private Address address;
+
+    private List<Account> accounts;
+
     private Map<String, Object> metadata;
 }
