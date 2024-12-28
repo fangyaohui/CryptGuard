@@ -97,7 +97,7 @@ class CryptGuardUseTestApplicationTests {
                 "  }\n" +
                 "}";
         // Process the JSON
-        String result = JSONProcessorUtils.processJson(json, ComplexUser.class);
+        String result = JSONProcessorUtils.processJson(json, ComplexUser.class, true);
         System.out.println(result);
     }
 

@@ -75,12 +75,12 @@ public class CustomMappingJackson2HttpMessageConverter extends MappingJackson2Ht
             // 将 InputStream 转换为 String
             String body = StreamUtils.copyToString(inputStream, StandardCharsets.UTF_8);
 //            // 获取目标类的字段信息
-            String typeName = type.getTypeName();
-            Class<?> clazz = Class.forName(typeName);
+//            String typeName = type.getTypeName();
+//            Class<?> clazz = Class.forName(typeName);
+            body = "{}";
 
-
-            body = JSONProcessorUtils.processJson(body, clazz);
-            log.info("JSONProcessorUtils process body is {}", body);
+//            body = JSONProcessorUtils.processJson(body, clazz);
+//            log.info("JSONProcessorUtils process body is {}", body);
 //
 //            // 根据注解配置，对指定字段进行解密或移除
 //            if (annotation.decryptValuesOnly()) {

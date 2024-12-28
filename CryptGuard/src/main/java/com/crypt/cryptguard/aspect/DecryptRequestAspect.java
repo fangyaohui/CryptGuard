@@ -4,6 +4,7 @@ import com.crypt.cryptguard.annotation.CryptTransient;
 import com.crypt.cryptguard.annotation.DecryptRequest;
 import com.crypt.cryptguard.annotation.DecryptTransient;
 import com.crypt.cryptguard.utils.AESUtils; // 导入AES解密工具类
+import com.crypt.cryptguard.utils.JSONProcessorUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper; // 导入ObjectMapper用于JSON与Java对象之间的转换
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -53,8 +54,8 @@ public class DecryptRequestAspect {
     }
 
     // 定义一个Before通知，表示在目标方法执行前进行解密处理
-    @Before("decryptRequestPointCut()")
-    public void handleDecryptRequestPointCutBefore(JoinPoint joinPoint) throws Throwable {
+    @Around("decryptRequestPointCut()")
+    public Object handleDecryptRequestPointCutBefore(ProceedingJoinPoint joinPoint) throws Throwable {
 
         // 获取当前请求的属性
         ServletRequestAttributes servletRequestAttributes =
@@ -63,7 +64,7 @@ public class DecryptRequestAspect {
         // 如果没有请求属性，则返回
         if(ObjectUtils.isEmpty(servletRequestAttributes)){
             log.info("decryptRequestPointCut ServletRequestAttributes is null");
-            return;
+            return joinPoint.proceed();
         }
 
         // 获取HttpServletRequest对象
@@ -72,7 +73,7 @@ public class DecryptRequestAspect {
         // 检查请求是否被包装为ContentCachingRequestWrapper类型
         if(!(httpServletRequest instanceof HttpServletRequestWrapper)){
             log.info("Request is not wrapped in ContentCachingRequestWrapper");
-            return;
+            return joinPoint.proceed();
         }
 
         // 将请求包装为ContentCachingRequestWrapper，获取原始请求体
@@ -91,20 +92,21 @@ public class DecryptRequestAspect {
         Class<?> targetClass = targetObject.getClass();
         Field[] fields = targetClass.getDeclaredFields(); // 获取所有字段（包括私有字段）
 
-//        if(decryptRequest.partialParamsDecrypt()){
-//            // 部分属性进行解密&注入
-//            paramsMap = decryptOriginalParams(paramsMap,targetClass,false);
-//            invokeFieldValue(fields,targetObject,paramsMap,false);
-//        }else if(decryptRequest.decryptValuesOnly()){
-//            // 所有属性进行解密&注入
-//            paramsMap = decryptOriginalParams(paramsMap,targetClass,true);
-//            invokeFieldValue(fields,targetObject,paramsMap,true);
-//        }else{
-//
-//        }
-
-        // 打印日志表示解密操作完成
-        log.info("doDecryptRequestPointCut is running");
+        if (decryptRequest.allParamsDecrypt()){
+            decryptedParams = AESUtils.decode((String) paramsMap.getOrDefault("encryptParam", ""), privateKey);
+            targetObject = objectMapper.readValue(decryptedParams, targetClass);
+            log.info("解密处理之后得到的对象为： {}",targetObject.toString());
+            args[0] = targetObject;
+            // 调用目标方法并返回结果
+            return joinPoint.proceed(args);
+        }else{
+            decryptedParams = JSONProcessorUtils.processJson(decryptedParams, targetClass, false);
+            targetObject = objectMapper.readValue(decryptedParams, targetClass);
+            log.info("解密处理之后得到的对象为： {}",targetObject.toString());
+            args[0] = targetObject;
+            // 调用目标方法并返回结果
+            return joinPoint.proceed(args);
+        }
     }
 
     // 根据传入的paramsMap和TargetObject把属性注入进去

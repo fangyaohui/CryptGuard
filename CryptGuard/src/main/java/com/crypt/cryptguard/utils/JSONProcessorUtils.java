@@ -1,11 +1,13 @@
 package com.crypt.cryptguard.utils;
 
 import com.crypt.cryptguard.annotation.DecryptTransient;
+import com.crypt.cryptguard.annotation.EncryptTransient;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
@@ -15,194 +17,241 @@ import java.util.*;
 
 /**
  * @FileName JSONProcessorUtils
- * @Description 处理JSON数据的工具类，支持动态字段转换和加密处理。
- *               提供基于字段类型、注解或特性进行递归节点处理的功能。
+ * @Description JSON处理工具类，支持字段加密和解密的动态转换。
  * @Author yaoHui
  * @date 2024-12-22
  **/
 @Slf4j
 public class JSONProcessorUtils {
 
-    // 单例模式的 ObjectMapper，用于JSON解析和生成
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    // 单例 ObjectMapper 实例，用于 JSON 解析和生成
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    // 标识已加密字段的后缀
-    private static final String cryptString = "_crypt";
+    // 加密字段的后缀标识
+    private static final String CRYPT_SUFFIX = "_crypt";
 
-    // 定义需要直接处理的基础类型集合
-    private static final Set<Class<?>> classSet = new HashSet<>() {{
-        add(int.class);
-        add(boolean.class);
-        add(float.class);
-        add(long.class);
-        add(Integer.class);
-        add(Long.class);
-        add(Boolean.class);
-        add(Float.class);
-        add(String.class);
-    }};
+    // AES 加密的私钥
+    private static final String PRIVATE_KEY = "fang";
+
+    // 定义直接处理的基础类型集合
+    private static final Set<Class<?>> BASE_TYPES = Set.of(
+            int.class, boolean.class, float.class, long.class,
+            Integer.class, Long.class, Boolean.class, Float.class, String.class
+    );
 
     /**
-     * 处理输入的JSON字符串，基于指定类的字段特性进行转换。
+     * 处理输入的 JSON 字符串，根据类字段特性进行加密或解密。
      *
-     * @param json 输入的JSON字符串
-     * @param clazz 指定的类类型
-     * @return 处理后的JSON字符串
-     * @throws JsonProcessingException JSON解析异常
-     * @throws IllegalAccessException 反射访问字段异常
+     * @param json      输入的 JSON 字符串
+     * @param clazz     指定的类类型，用于确定字段特性
+     * @param isEncrypt 是否加密处理，false 则为解密处理
+     * @return 处理后的 JSON 字符串
+     * @throws JsonProcessingException JSON 解析异常
+     * @throws IllegalAccessException  反射访问字段异常
      */
-    public static String processJson(String json, Class<?> clazz) throws JsonProcessingException, IllegalAccessException {
-        // 将JSON字符串解析为JsonNode对象
-        JsonNode rootNode = objectMapper.readTree(json);
-        // 处理根节点
-        processNode(rootNode, clazz, false);
-        // 将处理后的JsonNode对象转为字符串返回
-        return objectMapper.writeValueAsString(rootNode);
+    public static String processJson(String json, Class<?> clazz, boolean isEncrypt) throws JsonProcessingException, IllegalAccessException {
+        // 解析 JSON 字符串为 JsonNode
+        JsonNode rootNode = OBJECT_MAPPER.readTree(json);
+        // 递归处理节点
+        processCryptNode(rootNode, clazz, false, isEncrypt);
+        // 将处理后的 JsonNode 转为 JSON 字符串返回
+        return OBJECT_MAPPER.writeValueAsString(rootNode);
     }
 
     /**
-     * 递归处理JsonNode，根据类字段或指定的解密规则进行节点转换。
+     * 递归处理 JsonNode，根据类字段特性进行加密或解密。
      *
-     * @param node 当前要处理的JsonNode节点
-     * @param clazz 指定的类类型，用于解析字段
-     * @param isAllDecrypt 是否强制解密所有字段
+     * @param node         当前处理的 JsonNode 节点
+     * @param clazz        指定的类类型
+     * @param isAllProcess 是否强制处理所有字段
+     * @param isEncrypt    是否加密处理，false 则为解密处理
      * @throws IllegalAccessException 反射访问字段异常
      */
-    private static void processNode(JsonNode node, Class<?> clazz, Boolean isAllDecrypt) throws IllegalAccessException {
-        // 如果当前节点不是对象节点，直接返回
+    private static void processCryptNode(JsonNode node, Class<?> clazz, boolean isAllProcess, boolean isEncrypt) throws IllegalAccessException {
+        // 如果当前节点不是对象类型，直接返回
         if (!(node instanceof ObjectNode objectNode)) {
             return;
         }
 
-        // 特殊处理：如果类是Object且需要解密，则遍历所有字段
-        if (clazz == Object.class && isAllDecrypt) {
-            // 存储所有需要修改的字段
-            List<Map.Entry<String, JsonNode>> entriesToProcess = new ArrayList<>();
-            objectNode.fields().forEachRemaining(entriesToProcess::add);
-
-            // 遍历并处理字段
-            for (Map.Entry<String, JsonNode> entry : entriesToProcess) {
-                try {
-                    String key = entry.getKey();
-                    JsonNode valueNode = entry.getValue();
-
-                    if (valueNode.isObject()) {
-                        // 如果值是对象，递归处理
-                        ObjectNode newValueNode = (ObjectNode) valueNode.deepCopy();
-                        processNode(newValueNode, Object.class, true);
-                        objectNode.set(key + cryptString, newValueNode); // 设置新字段
-                    } else if (valueNode.isArray()) {
-                        // 如果值是数组（List类型），处理每个元素
-                        ArrayNode newArrayNode = objectNode.putArray(key + cryptString);
-                        for (JsonNode item : valueNode) {
-                            if (item.isObject()) {
-                                ObjectNode newItemNode = (ObjectNode) item.deepCopy();
-                                processNode(newItemNode, Object.class, true);
-                                newArrayNode.add(newItemNode);
-                            } else {
-                                newArrayNode.add(item);
-                            }
-                        }
-                    } else {
-                        // 基本类型字段的直接处理
-                        objectNode.set(key + cryptString, valueNode);
-                    }
-                    // 删除原字段
-                    objectNode.remove(key);
-                } catch (Exception e) {
-                    // 捕获异常并抛出运行时异常
-                    throw new RuntimeException("字段处理出错: " + entry.getKey(), e);
-                }
-            }
-            return ;
+        // 如果类是 Object 且需要处理所有字段，直接遍历所有键值对
+        if (clazz == Object.class) {
+            processObjectNode(objectNode, isEncrypt);
+            return;
         }
 
-        // 遍历类的所有字段，进行处理
+        if(isEncrypt){
+            isAllProcess = clazz.isAnnotationPresent(EncryptTransient.class) || isAllProcess;
+        }else{
+            isAllProcess = clazz.isAnnotationPresent(DecryptTransient.class) || isAllProcess;
+        }
+
+        // 遍历类的所有字段，依据字段特性逐一处理
         for (Field field : clazz.getDeclaredFields()) {
             field.setAccessible(true);
 
-            // 判断字段是否需要解密处理
-            boolean shouldDecrypt = field.isAnnotationPresent(DecryptTransient.class) || isAllDecrypt;
+            String fieldName = field.getName(); // 字段名称
+            boolean shouldProcess = shouldFieldBeProcessed(field, isAllProcess, isEncrypt); // 判断是否需要处理
 
-            // 基本类型字段的处理
-            if (classSet.contains(field.getType())) {
-                String fieldName = field.getName();
-                if (objectNode.has(fieldName) && shouldDecrypt) {
-                    JsonNode value = objectNode.remove(fieldName);
-                    objectNode.set(fieldName + cryptString, value);
-                }
+            // 根据字段类型选择处理逻辑
+            if (BASE_TYPES.contains(field.getType())) {
+                processBasicTypeField(objectNode, fieldName, shouldProcess, isEncrypt);
+            } else if (field.getType() == List.class) {
+                processListField(objectNode, field, fieldName, shouldProcess, isEncrypt);
+            } else if (Map.class.isAssignableFrom(field.getType())) {
+                processMapField(objectNode, fieldName, shouldProcess, isEncrypt);
+            } else {
+                // 非基础类型字段递归处理
+                processCryptNode(objectNode.get(fieldName), field.getType(), shouldProcess, isEncrypt);
             }
-            // 处理List类型字段
-            else if (field.getType() == List.class) {
-                Type genericType = field.getGenericType();
-                if (genericType instanceof ParameterizedType parameterizedType) {
-                    Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
-                    if (actualTypeArguments.length > 0) {
-                        Class<?> genericClass = (Class<?>) actualTypeArguments[0];
-                        log.info("List的泛型类型为: {}", genericClass.getName());
-
-                        String fieldName = field.getName();
-                        if (objectNode.has(fieldName)) {
-                            JsonNode listNode = objectNode.get(fieldName);
-                            if (listNode.isArray()) {
-                                for (JsonNode itemNode : listNode) {
-                                    if (itemNode.isObject()) {
-                                        // 根据条件调整 isAllDecrypt 值向下递归
-                                        processNode(itemNode, genericClass, shouldDecrypt);
-                                    }
-                                }
-                            } else {
-                                log.warn("字段 '{}' 不是JSON数组.", fieldName);
-                            }
-                        }
-                    }
-                } else {
-                    log.warn("字段缺少泛型类型信息.");
-                }
-            }
-            // 处理Map类型字段
-            else if (Map.class.isAssignableFrom(field.getType())) {
-                String fieldName = field.getName();
-                if (objectNode.has(fieldName)) {
-                    JsonNode mapNode = objectNode.get(fieldName);
-                    if (mapNode.isObject()) {
-                        ObjectNode newMapNode = objectNode.putObject(fieldName);
-                        mapNode.fields().forEachRemaining(entry -> {
-                            try {
-                                String key = entry.getKey();
-                                JsonNode valueNode = entry.getValue();
-
-                                if (valueNode.isObject()) {
-                                    // 递归处理Map的值为对象的情况
-                                    ObjectNode newValueNode = (ObjectNode) valueNode.deepCopy();
-                                    // 根据条件调整 isAllDecrypt 值向下递归
-                                    processNode(newValueNode, Object.class, shouldDecrypt);
-                                    newMapNode.set(key, newValueNode);
-                                } else {
-                                    if (shouldDecrypt){
-                                        newMapNode.set(key + cryptString, valueNode); // 添加后缀
-                                    }else{
-                                        newMapNode.set(key, valueNode); // 不添加添加后缀
-                                    }
-                                }
-                            } catch (IllegalAccessException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
-                    } else {
-                        log.warn("字段 '{}' 不是JSON对象（Map类型）.", fieldName);
-                    }
-                }
-            }else{
-                String fieldName = field.getName();
-                if(objectNode.has(fieldName)){
-                    JsonNode mapNode = objectNode.get(fieldName);
-                    processNode(mapNode, Object.class, shouldDecrypt);
-                }
-
-            }
-
         }
+    }
 
+    /**
+     * 处理 Object 类型的节点，强制递归所有字段。
+     *
+     * @param objectNode 当前对象节点
+     * @param isEncrypt  是否加密
+     */
+    private static void processObjectNode(ObjectNode objectNode, boolean isEncrypt) {
+        objectNode.fields().forEachRemaining(entry -> {
+            String key = entry.getKey();
+            JsonNode valueNode = entry.getValue();
+
+            if (valueNode.isObject()) {
+                try {
+                    processCryptNode(valueNode, Object.class, true, isEncrypt);
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            } else if (valueNode.isArray()) {
+                ArrayNode newArrayNode = processArrayNode((ArrayNode) valueNode, isEncrypt);
+                objectNode.set(key, newArrayNode);
+            } else if (valueNode.isTextual()) {
+                objectNode.put(key, processValue(valueNode.asText(), isEncrypt));
+            }
+        });
+    }
+
+    /**
+     * 判断字段是否需要处理。
+     *
+     * @param field       字段
+     * @param isAllProcess 是否强制处理所有字段
+     * @param isEncrypt   是否加密
+     * @return 是否需要处理
+     */
+    private static boolean shouldFieldBeProcessed(Field field, boolean isAllProcess, boolean isEncrypt) {
+        return isAllProcess || (isEncrypt && field.isAnnotationPresent(EncryptTransient.class))
+                || (!isEncrypt && field.isAnnotationPresent(DecryptTransient.class));
+    }
+
+    /**
+     * 处理基础类型字段。
+     */
+    private static void processBasicTypeField(ObjectNode objectNode, String fieldName, boolean shouldProcess, boolean isEncrypt) {
+        if (shouldProcess && objectNode.has(fieldName)) {
+            JsonNode valueNode = objectNode.get(fieldName);
+            objectNode.set(fieldName, new TextNode(processValue(valueNode.asText(), isEncrypt)));
+        }
+    }
+
+    /**
+     * 处理 List 类型字段。
+     */
+    private static void processListField(ObjectNode objectNode, Field field, String fieldName, boolean shouldProcess, boolean isEncrypt) throws IllegalAccessException {
+        if (!objectNode.has(fieldName)) {
+            return;
+        }
+        JsonNode listNode = objectNode.get(fieldName);
+        if (listNode.isArray()) {
+            ArrayNode newArrayNode = objectNode.putArray(fieldName);
+            Type genericType = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
+            Class<?> genericClass = (Class<?>) genericType;
+
+            for (JsonNode itemNode : listNode) {
+                if (itemNode.isObject()) {
+                    processCryptNode(itemNode, genericClass, shouldProcess, isEncrypt);
+                    newArrayNode.add(itemNode);
+                } else if (shouldProcess) {
+                    newArrayNode.add(processValue(itemNode.asText(), isEncrypt));
+                } else {
+                    newArrayNode.add(itemNode);
+                }
+            }
+        }
+    }
+
+    /**
+     * 处理 Map 类型字段。
+     */
+    private static void processMapField(ObjectNode objectNode, String fieldName, boolean shouldProcess, boolean isEncrypt) {
+        if (objectNode.has(fieldName)) {
+            JsonNode mapNode = objectNode.get(fieldName);
+
+            if (mapNode.isObject()) {
+                // 处理 Map 类型字段
+                ObjectNode objectMapNode = (ObjectNode) mapNode;
+                objectMapNode.fields().forEachRemaining(entry -> {
+                    String key = entry.getKey();
+                    JsonNode valueNode = entry.getValue();
+
+                    if (valueNode.isTextual() && shouldProcess) {
+                        objectMapNode.put(key, processValue(valueNode.asText(), isEncrypt));
+                    } else if (valueNode.isObject()) {
+                        // 如果是嵌套的 Map 类型，递归处理
+                        processMapField(objectMapNode, key, shouldProcess, isEncrypt);
+                    } else if (valueNode.isArray()) {
+                        // 如果是 List 类型，递归处理每一个元素
+                        processArrayNode((ArrayNode) valueNode, shouldProcess, isEncrypt);
+                    }
+                });
+            }
+        }
+    }
+
+    private static void processArrayNode(ArrayNode arrayNode, boolean shouldProcess, boolean isEncrypt) {
+        for (int i = 0; i < arrayNode.size(); i++) {
+            JsonNode element = arrayNode.get(i);
+
+            if (element.isTextual() && shouldProcess) {
+                arrayNode.set(i, new TextNode(processValue(element.asText(), isEncrypt)));
+            } else if (element.isObject()) {
+                // 如果元素是 Map 类型，递归处理
+                processMapField((ObjectNode) element, "nestedMapField", shouldProcess, isEncrypt);
+            }
+        }
+    }
+
+
+    /**
+     * 处理嵌套字段。
+     */
+    private static void processNestedField(ObjectNode objectNode, String fieldName, boolean shouldProcess, boolean isEncrypt) throws IllegalAccessException {
+        if (objectNode.has(fieldName)) {
+            JsonNode nestedNode = objectNode.get(fieldName);
+            processCryptNode(nestedNode, Object.class, shouldProcess, isEncrypt);
+        }
+    }
+
+    /**
+     * 处理字符串值，加密或解密。
+     */
+    private static String processValue(String value, boolean isEncrypt) {
+        return isEncrypt ? AESUtils.encode(value, PRIVATE_KEY) : AESUtils.decode(value, PRIVATE_KEY);
+    }
+
+    /**
+     * 处理 ArrayNode。
+     */
+    private static ArrayNode processArrayNode(ArrayNode arrayNode, boolean isEncrypt) {
+        ArrayNode newArrayNode = OBJECT_MAPPER.createArrayNode();
+        arrayNode.forEach(item -> {
+            if (item.isTextual()) {
+                newArrayNode.add(processValue(item.asText(), isEncrypt));
+            } else {
+                newArrayNode.add(item);
+            }
+        });
+        return newArrayNode;
     }
 }

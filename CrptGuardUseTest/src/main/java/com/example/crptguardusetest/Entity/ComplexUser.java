@@ -1,6 +1,7 @@
 package com.example.crptguardusetest.Entity;
 
 import com.crypt.cryptguard.annotation.DecryptTransient;
+import com.crypt.cryptguard.annotation.EncryptTransient;
 import lombok.Data;
 
 import java.util.List;
@@ -13,6 +14,8 @@ import java.util.Map;
  * @date 2024-12-22
  **/
 @Data
+@EncryptTransient
+@DecryptTransient
 public class ComplexUser {
 
     private String name;
