@@ -1,22 +1,15 @@
 package com.crypt.cryptguard.aspect;
 
-import com.crypt.cryptguard.annotation.CryptTransient;
 import com.crypt.cryptguard.annotation.DecryptRequest;
-import com.crypt.cryptguard.annotation.DecryptTransient;
 import com.crypt.cryptguard.utils.AESUtils; // 导入AES解密工具类
 import com.crypt.cryptguard.utils.JSONProcessorUtils;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper; // 导入ObjectMapper用于JSON与Java对象之间的转换
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.servlet.http.HttpServletRequest; // 导入HttpServletRequest类，用于访问HTTP请求
 import jakarta.servlet.http.HttpServletRequestWrapper; // 导入HttpServletRequestWrapper，用于包装请求
 import lombok.extern.slf4j.Slf4j; // 导入日志记录工具
-import org.aspectj.lang.JoinPoint; // 导入JoinPoint，用于获取方法信息
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect; // 导入Aspect注解，表示这是一个切面
-import org.aspectj.lang.annotation.Before; // 导入Before注解，表示在方法执行前运行
 import org.aspectj.lang.annotation.Pointcut; // 导入Pointcut注解，用于定义切点
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.core.annotation.Order;
@@ -26,9 +19,6 @@ import org.springframework.web.context.request.RequestContextHolder; // 导入Re
 import org.springframework.web.context.request.ServletRequestAttributes; // 导入ServletRequestAttributes，用于获取请求属性
 import org.springframework.web.util.ContentCachingRequestWrapper; // 导入ContentCachingRequestWrapper，用于缓存请求内容
 
-import java.lang.reflect.Field; // 导入反射的Field类，用于访问字段
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map; // 导入Map，用于存储解密后的请求参数
 
 /**
@@ -40,6 +30,7 @@ import java.util.Map; // 导入Map，用于存储解密后的请求参数
 @Slf4j // 使用Slf4j日志记录
 @Aspect // 表示这是一个切面
 @Component // 表示该类为Spring组件
+@Order(Integer.MIN_VALUE)
 public class DecryptRequestAspect {
 
     // 创建一个ObjectMapper实例，用于JSON和Java对象的转换
@@ -55,7 +46,6 @@ public class DecryptRequestAspect {
     }
 
     // 定义一个Before通知，表示在目标方法执行前进行解密处理
-    @Order(1)
     @Around("decryptRequestPointCut()")
     public Object handleDecryptRequestPointCutBefore(ProceedingJoinPoint joinPoint) throws Throwable {
 
@@ -92,7 +82,6 @@ public class DecryptRequestAspect {
         Object[] args = joinPoint.getArgs();
         Object targetObject = args[0]; // 获取第一个参数的实例（假设第一个参数是需要解密的对象）
         Class<?> targetClass = targetObject.getClass();
-        Field[] fields = targetClass.getDeclaredFields(); // 获取所有字段（包括私有字段）
 
         if (decryptRequest.allParamsDecrypt()){
             decryptedParams = AESUtils.decode((String) paramsMap.getOrDefault("encryptParam", ""), privateKey);

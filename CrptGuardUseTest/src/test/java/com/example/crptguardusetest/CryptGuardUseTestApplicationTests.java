@@ -96,8 +96,12 @@ class CryptGuardUseTestApplicationTests {
                 "    }\n" +
                 "  }\n" +
                 "}";
+
+        String newJson = "{\"code\":200,\"message\":null,\"data\":{\"name\":\"John Doe\",\"email\":\"john.doe@example.com\",\"address\":{\"street\":\"123 Elm Street\",\"city\":\"Metropolis\",\"details\":{\"buildingCode\":\"A12\",\"securityCode\":\"9999\"}},\"accounts\":[{\"type\":\"savings\",\"balance\":\"1000\",\"limit\":null,\"credentials\":{\"password\":\"12345\",\"pin\":\"5678\"}},{\"type\":\"credit\",\"balance\":null,\"limit\":\"5000\",\"credentials\":{\"password\":\"54321\",\"pin\":\"8765\"}}],\"metadata\":{\"createdDate\":\"2024-01-01\",\"tags\":[\"VIP\",\"test\"],\"settings\":{\"theme\":\"dark\",\"notifications\":\"enabled\"}}},\"currentTimeMillis\":1735444496742}";
+
+
         // Process the JSON
-        String result = JSONProcessorUtils.processJson(json, ComplexUser.class, true);
+        String result = JSONProcessorUtils.processJson(newJson, ComplexUser.class, true);
         System.out.println(result);
     }
 

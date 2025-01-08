@@ -49,7 +49,8 @@ public class JSONProcessorUtils {
      * @throws JsonProcessingException JSON 解析异常
      * @throws IllegalAccessException  反射访问字段异常
      */
-    public static String processJson(String json, Class<?> clazz, boolean isEncrypt) throws JsonProcessingException, IllegalAccessException {
+    public static String processJson(String json, Class<?> clazz, boolean isEncrypt)
+            throws JsonProcessingException, IllegalAccessException {
         // 解析 JSON 字符串为 JsonNode
         JsonNode rootNode = OBJECT_MAPPER.readTree(json);
         // 递归处理节点
@@ -67,7 +68,8 @@ public class JSONProcessorUtils {
      * @param isEncrypt    是否加密处理，false 则为解密处理
      * @throws IllegalAccessException 反射访问字段异常
      */
-    private static void processCryptNode(JsonNode node, Class<?> clazz, boolean isAllProcess, boolean isEncrypt) throws IllegalAccessException {
+    private static void processCryptNode(JsonNode node, Class<?> clazz,
+                                         boolean isAllProcess, boolean isEncrypt) throws IllegalAccessException {
         // 如果当前节点不是对象类型，直接返回
         if (!(node instanceof ObjectNode objectNode)) {
             return;
@@ -107,7 +109,8 @@ public class JSONProcessorUtils {
     }
 
     /**
-     * 处理 Object 类型的节点，强制递归所有字段。
+     * 处理 ObjectNode。
+     * 支持递归处理嵌套的对象和数组，直接在传入的 ObjectNode 上操作。
      *
      * @param objectNode 当前对象节点
      * @param isEncrypt  是否加密
@@ -117,18 +120,18 @@ public class JSONProcessorUtils {
             String key = entry.getKey();
             JsonNode valueNode = entry.getValue();
 
-            if (valueNode.isObject()) {
-                try {
-                    processCryptNode(valueNode, Object.class, true, isEncrypt);
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
-            } else if (valueNode.isArray()) {
-                ArrayNode newArrayNode = processArrayNode((ArrayNode) valueNode, isEncrypt);
-                objectNode.set(key, newArrayNode);
-            } else if (valueNode.isTextual()) {
+            if (valueNode.isTextual()) {
+                // 如果值是文本类型，处理加密或解密
                 objectNode.put(key, processValue(valueNode.asText(), isEncrypt));
+            } else if (valueNode.isObject()) {
+                // 如果值是嵌套的 ObjectNode，递归处理
+                processObjectNode((ObjectNode) valueNode, isEncrypt);
+            } else if (valueNode.isArray()) {
+                // 如果值是嵌套的 ArrayNode，递归处理
+                ArrayNode processedArray = processArrayNode((ArrayNode) valueNode, isEncrypt);
+                objectNode.set(key, processedArray);
             }
+            // 其他类型无需处理，保持原样
         });
     }
 
@@ -158,7 +161,8 @@ public class JSONProcessorUtils {
     /**
      * 处理 List 类型字段。
      */
-    private static void processListField(ObjectNode objectNode, Field field, String fieldName, boolean shouldProcess, boolean isEncrypt) throws IllegalAccessException {
+    private static void processListField(ObjectNode objectNode, Field field, String fieldName,
+                                         boolean shouldProcess, boolean isEncrypt) throws IllegalAccessException {
         if (!objectNode.has(fieldName)) {
             return;
         }
@@ -222,17 +226,6 @@ public class JSONProcessorUtils {
         }
     }
 
-
-    /**
-     * 处理嵌套字段。
-     */
-    private static void processNestedField(ObjectNode objectNode, String fieldName, boolean shouldProcess, boolean isEncrypt) throws IllegalAccessException {
-        if (objectNode.has(fieldName)) {
-            JsonNode nestedNode = objectNode.get(fieldName);
-            processCryptNode(nestedNode, Object.class, shouldProcess, isEncrypt);
-        }
-    }
-
     /**
      * 处理字符串值，加密或解密。
      */
@@ -247,11 +240,21 @@ public class JSONProcessorUtils {
         ArrayNode newArrayNode = OBJECT_MAPPER.createArrayNode();
         arrayNode.forEach(item -> {
             if (item.isTextual()) {
+                // 处理文本类型的值
                 newArrayNode.add(processValue(item.asText(), isEncrypt));
+            } else if (item.isObject()) {
+                // 递归处理 ObjectNode
+                processObjectNode((ObjectNode) item, isEncrypt);
+                newArrayNode.add(item);
+            } else if (item.isArray()) {
+                // 递归处理嵌套的 ArrayNode
+                newArrayNode.add(processArrayNode((ArrayNode) item, isEncrypt));
             } else {
+                // 直接添加其他类型的值
                 newArrayNode.add(item);
             }
         });
         return newArrayNode;
     }
+
 }

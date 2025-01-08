@@ -1,7 +1,9 @@
 package com.example.crptguardusetest.controller;
 
 import com.crypt.cryptguard.annotation.DecryptRequest;
+import com.crypt.cryptguard.annotation.EncryptResponse;
 import com.example.crptguardusetest.Entity.ComplexUser;
+import com.example.crptguardusetest.Entity.R;
 import com.example.crptguardusetest.Entity.UserInfoPO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -45,9 +47,10 @@ public class TestController {
 
     @PostMapping("/decrypt/annotation/decryptValuesOnlyRequest")
     @DecryptRequest(allParamsDecrypt = false)
-    public ComplexUser decryptValuesOnlyRequest(@RequestBody ComplexUser complexUser){
+    @EncryptResponse()
+    public R<ComplexUser> decryptValuesOnlyRequest(@RequestBody ComplexUser complexUser){
         log.info("decryptValuesOnlyRequest params is {}",complexUser.toString());
-        return complexUser;
+        return R.success(complexUser);
     }
 
     /***
