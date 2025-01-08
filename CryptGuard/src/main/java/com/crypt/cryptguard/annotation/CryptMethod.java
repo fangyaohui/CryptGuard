@@ -11,8 +11,10 @@ import java.lang.annotation.*;
 @Target(value = ElementType.METHOD)
 @Retention(value = RetentionPolicy.RUNTIME)
 @Documented
-@DecryptRequest
-@EncryptResponse
 public @interface CryptMethod {
+
+    // 是否解密整个参数（即包括所有字段的值）
+    // 如果是False则是只会对value进行加密
+    boolean allParamsDecrypt() default true;
 
 }

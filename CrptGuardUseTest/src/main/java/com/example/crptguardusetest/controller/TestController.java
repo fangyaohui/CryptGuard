@@ -1,5 +1,6 @@
 package com.example.crptguardusetest.controller;
 
+import com.crypt.cryptguard.annotation.CryptMethod;
 import com.crypt.cryptguard.annotation.DecryptRequest;
 import com.crypt.cryptguard.annotation.EncryptResponse;
 import com.example.crptguardusetest.Entity.ComplexUser;
@@ -50,6 +51,13 @@ public class TestController {
     @EncryptResponse()
     public R<ComplexUser> decryptValuesOnlyRequest(@RequestBody ComplexUser complexUser){
         log.info("decryptValuesOnlyRequest params is {}",complexUser.toString());
+        return R.success(complexUser);
+    }
+
+    @PostMapping("/decrypt/annotation/cryptMethodRequest")
+    @CryptMethod(allParamsDecrypt = false)
+    public R<ComplexUser> cryptMethodRequest(@RequestBody ComplexUser complexUser){
+        log.info("cryptMethodRequest params is {}",complexUser.toString());
         return R.success(complexUser);
     }
 

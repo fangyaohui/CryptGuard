@@ -1,5 +1,6 @@
 package com.crypt.cryptguard.utils;
 
+import com.crypt.cryptguard.annotation.CryptTransient;
 import com.crypt.cryptguard.annotation.DecryptTransient;
 import com.crypt.cryptguard.annotation.EncryptTransient;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -82,9 +83,11 @@ public class JSONProcessorUtils {
         }
 
         if(isEncrypt){
-            isAllProcess = clazz.isAnnotationPresent(EncryptTransient.class) || isAllProcess;
+            isAllProcess = clazz.isAnnotationPresent(EncryptTransient.class) ||
+                    clazz.isAnnotationPresent(CryptTransient.class) || isAllProcess;
         }else{
-            isAllProcess = clazz.isAnnotationPresent(DecryptTransient.class) || isAllProcess;
+            isAllProcess = clazz.isAnnotationPresent(DecryptTransient.class) ||
+                    clazz.isAnnotationPresent(CryptTransient.class) || isAllProcess;
         }
 
         // 遍历类的所有字段，依据字段特性逐一处理

@@ -1,7 +1,7 @@
 package com.crypt.cryptguard.aspect;
 
+import com.crypt.cryptguard.annotation.CryptMethod;
 import com.crypt.cryptguard.annotation.EncryptResponse;
-import com.crypt.cryptguard.entity.ResponseEncryptPO;
 import com.crypt.cryptguard.utils.JSONProcessorUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,8 @@ public class EncryptResponseAspect {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Pointcut("@annotation(com.crypt.cryptguard.annotation.EncryptResponse)")
+    @Pointcut("@annotation(com.crypt.cryptguard.annotation.EncryptResponse) " +
+            "|| @annotation(com.crypt.cryptguard.annotation.CryptMethod)")
     public void encryptResponsePointCut(){
 
     }
@@ -45,8 +46,9 @@ public class EncryptResponseAspect {
         MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
         Method method = methodSignature.getMethod();
         EncryptResponse encryptResponse = method.getAnnotation(EncryptResponse.class);
+        CryptMethod cryptMethod = method.getAnnotation(CryptMethod.class);
 
-        if (ObjectUtils.isEmpty(encryptResponse)) {
+        if (ObjectUtils.isEmpty(encryptResponse) && ObjectUtils.isEmpty(cryptMethod)) {
             return result;
         }
 

@@ -1,5 +1,6 @@
 package com.crypt.cryptguard.aspect;
 
+import com.crypt.cryptguard.annotation.CryptMethod;
 import com.crypt.cryptguard.annotation.DecryptRequest;
 import com.crypt.cryptguard.utils.AESUtils; // 导入AES解密工具类
 import com.crypt.cryptguard.utils.JSONProcessorUtils;
@@ -40,7 +41,8 @@ public class DecryptRequestAspect {
     private final static String privateKey = "fang";
 
     // 定义一个切点，匹配带有@DecryptRequest注解的方法
-    @Pointcut("@annotation(com.crypt.cryptguard.annotation.DecryptRequest)")
+    @Pointcut("@annotation(com.crypt.cryptguard.annotation.DecryptRequest) " +
+            "|| @annotation(com.crypt.cryptguard.annotation.CryptMethod)")
     public void decryptRequestPointCut(){
         // 切点方法体为空，表示切点的定义，目标方法会根据此注解被拦截
     }
@@ -77,13 +79,24 @@ public class DecryptRequestAspect {
 
         MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
         DecryptRequest decryptRequest = methodSignature.getMethod().getAnnotation(DecryptRequest.class);
+        CryptMethod cryptMethod = methodSignature.getMethod().getAnnotation(CryptMethod.class);
+
+        boolean allParamsDecrypt = true;
+
+        // 防止 NullPointerException
+        if (cryptMethod != null) {
+            allParamsDecrypt = cryptMethod.allParamsDecrypt();
+        }
+        if (decryptRequest != null) {
+            allParamsDecrypt = allParamsDecrypt || decryptRequest.allParamsDecrypt();
+        }
         String decryptedParams = originalBody;
         // 获取目标方法的参数
         Object[] args = joinPoint.getArgs();
         Object targetObject = args[0]; // 获取第一个参数的实例（假设第一个参数是需要解密的对象）
         Class<?> targetClass = targetObject.getClass();
 
-        if (decryptRequest.allParamsDecrypt()){
+        if (allParamsDecrypt){
             decryptedParams = AESUtils.decode((String) paramsMap.getOrDefault("encryptParam", ""), privateKey);
             targetObject = objectMapper.readValue(decryptedParams, targetClass);
             log.info("解密处理之后得到的对象为： {}",targetObject.toString());
