@@ -17,11 +17,5 @@ public @interface DecryptRequest {
     // 是否解密整个参数（即包括所有字段的值）
     // 如果是False则是只会对value进行加密
     boolean allParamsDecrypt() default true;
-
-//    // 是否只解密参数值，不解密键名
-//    boolean decryptValuesOnly() default false;
-//
-//    // 是否只解密部分参数值
-//    boolean partialParamsDecrypt() default false;
 }
 

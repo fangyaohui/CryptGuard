@@ -11,8 +11,8 @@ import java.lang.annotation.*;
 @Target(value = ElementType.TYPE)
 @Retention(value = RetentionPolicy.RUNTIME)
 @Documented
-@DecryptController
-@EncryptController
 public @interface CryptController {
-
+    // 是否解密整个参数（即包括所有字段的值）
+    // 如果是False则是只会对value进行加密
+    boolean allParamsDecrypt() default true;
 }

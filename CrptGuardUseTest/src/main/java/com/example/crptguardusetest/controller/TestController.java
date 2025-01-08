@@ -1,8 +1,6 @@
 package com.example.crptguardusetest.controller;
 
-import com.crypt.cryptguard.annotation.CryptMethod;
-import com.crypt.cryptguard.annotation.DecryptRequest;
-import com.crypt.cryptguard.annotation.EncryptResponse;
+import com.crypt.cryptguard.annotation.*;
 import com.example.crptguardusetest.Entity.ComplexUser;
 import com.example.crptguardusetest.Entity.R;
 import com.example.crptguardusetest.Entity.UserInfoPO;
@@ -20,6 +18,9 @@ import org.springframework.web.bind.annotation.RestController;
  **/
 @Slf4j
 @RestController
+@CryptController(allParamsDecrypt = false)
+//@DecryptController(allParamsDecrypt = false)
+//@EncryptController
 public class TestController {
 
 
@@ -58,6 +59,12 @@ public class TestController {
     @CryptMethod(allParamsDecrypt = false)
     public R<ComplexUser> cryptMethodRequest(@RequestBody ComplexUser complexUser){
         log.info("cryptMethodRequest params is {}",complexUser.toString());
+        return R.success(complexUser);
+    }
+
+    @PostMapping("/decrypt/annotation/decryptControllerMethodRequest")
+    public R<ComplexUser> decryptControllerMethodRequest(@RequestBody ComplexUser complexUser){
+        log.info("decryptControllerMethodRequest params is {}",complexUser.toString());
         return R.success(complexUser);
     }
 

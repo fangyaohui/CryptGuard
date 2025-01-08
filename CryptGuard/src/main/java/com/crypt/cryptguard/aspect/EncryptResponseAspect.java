@@ -1,6 +1,8 @@
 package com.crypt.cryptguard.aspect;
 
+import com.crypt.cryptguard.annotation.CryptController;
 import com.crypt.cryptguard.annotation.CryptMethod;
+import com.crypt.cryptguard.annotation.EncryptController;
 import com.crypt.cryptguard.annotation.EncryptResponse;
 import com.crypt.cryptguard.utils.JSONProcessorUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,7 +33,9 @@ public class EncryptResponseAspect {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Pointcut("@annotation(com.crypt.cryptguard.annotation.EncryptResponse) " +
-            "|| @annotation(com.crypt.cryptguard.annotation.CryptMethod)")
+            "|| @annotation(com.crypt.cryptguard.annotation.CryptMethod)" +
+            "|| @within(com.crypt.cryptguard.annotation.EncryptController)" +
+            "|| @within(com.crypt.cryptguard.annotation.CryptController)")
     public void encryptResponsePointCut(){
 
     }
@@ -47,8 +51,11 @@ public class EncryptResponseAspect {
         Method method = methodSignature.getMethod();
         EncryptResponse encryptResponse = method.getAnnotation(EncryptResponse.class);
         CryptMethod cryptMethod = method.getAnnotation(CryptMethod.class);
+        EncryptController encryptController = joinPoint.getTarget().getClass().getAnnotation(EncryptController.class);
+        CryptController cryptController = joinPoint.getTarget().getClass().getAnnotation(CryptController.class);
 
-        if (ObjectUtils.isEmpty(encryptResponse) && ObjectUtils.isEmpty(cryptMethod)) {
+        if (ObjectUtils.isEmpty(encryptResponse) && ObjectUtils.isEmpty(cryptMethod)
+                && ObjectUtils.isEmpty(encryptController) && ObjectUtils.isEmpty(cryptController)) {
             return result;
         }
 

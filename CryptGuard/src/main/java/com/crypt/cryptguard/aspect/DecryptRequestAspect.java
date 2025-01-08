@@ -1,6 +1,8 @@
 package com.crypt.cryptguard.aspect;
 
+import com.crypt.cryptguard.annotation.CryptController;
 import com.crypt.cryptguard.annotation.CryptMethod;
+import com.crypt.cryptguard.annotation.DecryptController;
 import com.crypt.cryptguard.annotation.DecryptRequest;
 import com.crypt.cryptguard.utils.AESUtils; // 导入AES解密工具类
 import com.crypt.cryptguard.utils.JSONProcessorUtils;
@@ -42,7 +44,9 @@ public class DecryptRequestAspect {
 
     // 定义一个切点，匹配带有@DecryptRequest注解的方法
     @Pointcut("@annotation(com.crypt.cryptguard.annotation.DecryptRequest) " +
-            "|| @annotation(com.crypt.cryptguard.annotation.CryptMethod)")
+            "|| @annotation(com.crypt.cryptguard.annotation.CryptMethod)" +
+            "|| @within(com.crypt.cryptguard.annotation.DecryptController)" +
+            "|| @within(com.crypt.cryptguard.annotation.CryptController)")
     public void decryptRequestPointCut(){
         // 切点方法体为空，表示切点的定义，目标方法会根据此注解被拦截
     }
@@ -80,8 +84,10 @@ public class DecryptRequestAspect {
         MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
         DecryptRequest decryptRequest = methodSignature.getMethod().getAnnotation(DecryptRequest.class);
         CryptMethod cryptMethod = methodSignature.getMethod().getAnnotation(CryptMethod.class);
+        DecryptController decryptController = joinPoint.getTarget().getClass().getAnnotation(DecryptController.class);
+        CryptController cryptController = joinPoint.getTarget().getClass().getAnnotation(CryptController.class);
 
-        boolean allParamsDecrypt = true;
+        boolean allParamsDecrypt = false;
 
         // 防止 NullPointerException
         if (cryptMethod != null) {
@@ -89,6 +95,12 @@ public class DecryptRequestAspect {
         }
         if (decryptRequest != null) {
             allParamsDecrypt = allParamsDecrypt || decryptRequest.allParamsDecrypt();
+        }
+        if (decryptController != null){
+            allParamsDecrypt = allParamsDecrypt || decryptController.allParamsDecrypt();
+        }
+        if (cryptController != null){
+            allParamsDecrypt = allParamsDecrypt || cryptController.allParamsDecrypt();
         }
         String decryptedParams = originalBody;
         // 获取目标方法的参数

@@ -1,5 +1,7 @@
 package com.crypt.cryptguard.resolver;
 
+import com.crypt.cryptguard.annotation.CryptController;
+import com.crypt.cryptguard.annotation.DecryptController;
 import com.crypt.cryptguard.annotation.DecryptRequest;
 import com.crypt.cryptguard.utils.JSONProcessorUtils;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -59,12 +61,28 @@ public class CustomMappingJackson2HttpMessageConverter extends MappingJackson2Ht
 
         // 检查方法是否标记了 @DecryptRequest 注解
         DecryptRequest annotation = currentMethod.getAnnotation(DecryptRequest.class);
-        if (ObjectUtils.isEmpty(annotation)) {
+        DecryptController decryptController = contextClass.getAnnotation(DecryptController.class);
+        CryptController cryptController = contextClass.getAnnotation(CryptController.class);
+
+        if (ObjectUtils.isEmpty(annotation) && ObjectUtils.isEmpty(decryptController)
+                && ObjectUtils.isEmpty(cryptController)) {
             // 如果没有注解，直接调用父类逻辑
             return super.read(type, contextClass, inputMessage);
         }
 
-        if(annotation.allParamsDecrypt()){
+        boolean allParamsDecrypt = false;
+
+        if (annotation != null){
+            allParamsDecrypt = annotation.allParamsDecrypt();
+        }
+        if (decryptController != null){
+            allParamsDecrypt = allParamsDecrypt || decryptController.allParamsDecrypt();
+        }
+        if (decryptController != null){
+            allParamsDecrypt = allParamsDecrypt || cryptController.allParamsDecrypt();
+        }
+
+        if(allParamsDecrypt){
             return super.read(type, contextClass, inputMessage);
         }
 
@@ -74,26 +92,7 @@ public class CustomMappingJackson2HttpMessageConverter extends MappingJackson2Ht
 
             // 将 InputStream 转换为 String
             String body = StreamUtils.copyToString(inputStream, StandardCharsets.UTF_8);
-//            // 获取目标类的字段信息
-//            String typeName = type.getTypeName();
-//            Class<?> clazz = Class.forName(typeName);
             body = "{}";
-
-//            body = JSONProcessorUtils.processJson(body, clazz);
-//            log.info("JSONProcessorUtils process body is {}", body);
-//
-//            // 根据注解配置，对指定字段进行解密或移除
-//            if (annotation.decryptValuesOnly()) {
-//                for (Field field : fields) {
-//                    String fieldName = field.getName();
-//                    if (rootNode.has(fieldName)) {
-//                        // 移除字段（示例逻辑，可替换为实际解密操作）
-//                        ((ObjectNode) rootNode).remove(fieldName);
-//                    }
-//                }
-//                // 将修改后的 JSON 转换回字符串
-//                body = objectMapper.writeValueAsString(rootNode);
-//            }
 
             // 使用修改后的 JSON 重新构建 InputStream
             ByteArrayInputStream updatedInputStream = new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8));
