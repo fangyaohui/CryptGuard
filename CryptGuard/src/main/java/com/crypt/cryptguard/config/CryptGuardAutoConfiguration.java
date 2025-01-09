@@ -1,5 +1,6 @@
 package com.crypt.cryptguard.config;
 
+import com.crypt.cryptguard.Interceptor.EncryptInterceptor;
 import com.crypt.cryptguard.aspect.DecryptRequestAspect;
 import com.crypt.cryptguard.aspect.EncryptResponseAspect;
 import com.crypt.cryptguard.filter.RequestCachingFilter;
@@ -39,14 +40,15 @@ public class CryptGuardAutoConfiguration {
         return requestCachingFilterFilterRegistrationBean;
     }
 
-//    @Bean
-//    public DecryptArgumentResolver decryptArgumentResolver(){
-//        return new DecryptArgumentResolver();
-//    }
-//
     @Bean
     public WebConfig webConfig(){
         log.info("WebConfig");
         return new WebConfig();
+    }
+
+    @Bean
+    public EncryptInterceptor encryptInterceptor(){
+        log.info("EncryptInterceptor init bean is running...");
+        return new EncryptInterceptor();
     }
 }

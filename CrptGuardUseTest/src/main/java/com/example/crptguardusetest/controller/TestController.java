@@ -4,11 +4,15 @@ import com.crypt.cryptguard.annotation.*;
 import com.example.crptguardusetest.Entity.ComplexUser;
 import com.example.crptguardusetest.Entity.R;
 import com.example.crptguardusetest.Entity.UserInfoPO;
+import com.example.crptguardusetest.service.impl.UserInfoServiceImpl;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.UUID;
 
 /**
  * @FileName TestController
@@ -18,10 +22,13 @@ import org.springframework.web.bind.annotation.RestController;
  **/
 @Slf4j
 @RestController
+@AllArgsConstructor
 @CryptController(allParamsDecrypt = false)
 //@DecryptController(allParamsDecrypt = false)
 //@EncryptController
 public class TestController {
+
+    private UserInfoServiceImpl userInfoService;
 
 
     @GetMapping("/getTest")
@@ -65,6 +72,12 @@ public class TestController {
     @PostMapping("/decrypt/annotation/decryptControllerMethodRequest")
     public R<ComplexUser> decryptControllerMethodRequest(@RequestBody ComplexUser complexUser){
         log.info("decryptControllerMethodRequest params is {}",complexUser.toString());
+        UserInfoPO userInfoPO = userInfoService.getById(1);
+        log.info("find user_info is : "+userInfoPO.toString());
+        UserInfoPO tempUserInfo = new UserInfoPO();
+        tempUserInfo.setUsername("fang"+ UUID.randomUUID());
+        tempUserInfo.setPassword("fang" + UUID.randomUUID());
+        userInfoService.save(tempUserInfo);
         return R.success(complexUser);
     }
 

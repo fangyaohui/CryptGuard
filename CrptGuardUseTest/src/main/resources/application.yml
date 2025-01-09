@@ -12,3 +12,15 @@ spring:
         username: nacos
         password: nacos
         server-addr: localhost:8848
+
+  datasource:
+#    type: com.alibaba.druid.pool.DruidDataSource
+    username: root
+    password: 123456
+    url: jdbc:mysql://localhost:3306/cryptguard?characterEncoding=UTF-8&serverTimezone=UTC
+    driver-class-name: com.mysql.cj.jdbc.Driver
+#    druid:
+#      username: root
+#      password: 123456
+#      url: jdbc:mysql://localhost:3306/screw_it_development_biz?characterEncoding=UTF-8&serverTimezone=UTC
+#      driver-class-name: com.mysql.cj.jdbc.Driver
