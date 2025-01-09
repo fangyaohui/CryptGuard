@@ -3,6 +3,7 @@ package com.example.crptguardusetest.Entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.crypt.cryptguard.annotation.CryptTransient;
 import com.crypt.cryptguard.annotation.DecryptTransient;
 import lombok.Data;
 import org.apache.ibatis.plugin.Intercepts;
@@ -25,5 +26,11 @@ public class UserInfoPO {
     private String username;
 
     private String password;
+
+    @CryptTransient()
+    private String schoolName;
+
+    @CryptTransient()
+    private String age;
 
 }

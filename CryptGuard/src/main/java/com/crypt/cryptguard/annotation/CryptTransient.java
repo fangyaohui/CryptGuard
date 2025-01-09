@@ -15,4 +15,9 @@ import java.lang.annotation.*;
 @Retention(value = RetentionPolicy.RUNTIME)
 @Documented
 public @interface CryptTransient {
+
+    String strategy() default "AES"; // 加密算法，默认AES
+    boolean querySupport() default false; // 是否支持普通查询
+    boolean fuzzyQuerySupport() default false; // 是否支持模糊查询
+
 }

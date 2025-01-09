@@ -1,5 +1,8 @@
 package com.crypt.cryptguard.Interceptor;
 
+import com.crypt.cryptguard.annotation.CryptTransient;
+import com.crypt.cryptguard.strategy.CryptStrategy;
+import com.crypt.cryptguard.strategy.CryptStrategyFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.executor.parameter.ParameterHandler;
@@ -10,7 +13,9 @@ import org.apache.ibatis.plugin.Invocation;
 import org.apache.ibatis.plugin.Signature;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
+import org.springframework.util.ObjectUtils;
 
+import java.lang.reflect.Field;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 
@@ -40,6 +45,37 @@ public class EncryptInterceptor implements Interceptor {
     @Override
     public Object intercept(Invocation invocation) throws Throwable {
         log.info("intercept is running...");
+        Object[] args = invocation.getArgs();
+        Object parameterObject = args[1];
+        if(ObjectUtils.isEmpty(parameterObject)){
+            return invocation.proceed();
+        }
+
+        Class<?> clazz = parameterObject.getClass();
+        Field[] fields = clazz.getDeclaredFields();
+
+        // 判断当前更新的数据属性中是否存在指定注解
+        for(Field field : fields){
+            field.setAccessible(true);
+            if(!field.isAnnotationPresent(CryptTransient.class)){
+                continue;
+            }
+
+            CryptTransient cryptTransient = field.getAnnotation(CryptTransient.class);
+            CryptStrategy cryptStrategy = CryptStrategyFactory.getStrategy(cryptTransient.strategy());
+            String value = (String) field.get(parameterObject);
+            if (ObjectUtils.isEmpty(value)){
+                log.info("value is null... continue....");
+                continue;
+            }
+            log.info("original value is "+value);
+            String encryptedValue = cryptStrategy.encrypt(value);
+            log.info("encrypted value is " + encryptedValue);
+            field.set(parameterObject,encryptedValue);
+        }
+
+        log.info("encrypted Object is "+ parameterObject.toString());
+
         return invocation.proceed();
     }
 }

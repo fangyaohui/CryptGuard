@@ -77,6 +77,7 @@ public class TestController {
         UserInfoPO tempUserInfo = new UserInfoPO();
         tempUserInfo.setUsername("fang"+ UUID.randomUUID());
         tempUserInfo.setPassword("fang" + UUID.randomUUID());
+        tempUserInfo.setAge("124313");
         userInfoService.save(tempUserInfo);
         return R.success(complexUser);
     }
