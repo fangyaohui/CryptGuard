@@ -4,7 +4,8 @@ import com.crypt.cryptguard.annotation.CryptController;
 import com.crypt.cryptguard.annotation.CryptMethod;
 import com.crypt.cryptguard.annotation.DecryptController;
 import com.crypt.cryptguard.annotation.DecryptRequest;
-import com.crypt.cryptguard.utils.AESUtils; // 导入AES解密工具类
+import com.crypt.cryptguard.strategy.CryptStrategy;
+import com.crypt.cryptguard.strategy.CryptStrategyFactory;
 import com.crypt.cryptguard.utils.JSONProcessorUtils;
 import com.fasterxml.jackson.databind.ObjectMapper; // 导入ObjectMapper用于JSON与Java对象之间的转换
 import jakarta.servlet.http.HttpServletRequest; // 导入HttpServletRequest类，用于访问HTTP请求
@@ -41,6 +42,8 @@ public class DecryptRequestAspect {
 
     // 设置私钥，用于AES解密
     private final static String privateKey = "fang";
+
+    private final static CryptStrategy cryptStrategy = CryptStrategyFactory.getStrategy();
 
     // 定义一个切点，匹配带有@DecryptRequest注解的方法
     @Pointcut("@annotation(com.crypt.cryptguard.annotation.DecryptRequest) " +
@@ -109,7 +112,7 @@ public class DecryptRequestAspect {
         Class<?> targetClass = targetObject.getClass();
 
         if (allParamsDecrypt){
-            decryptedParams = AESUtils.decode((String) paramsMap.getOrDefault("encryptParam", ""), privateKey);
+            decryptedParams =  cryptStrategy.decrypt((String) paramsMap.getOrDefault("encryptParam", ""));
             targetObject = objectMapper.readValue(decryptedParams, targetClass);
             log.info("解密处理之后得到的对象为： {}",targetObject.toString());
             args[0] = targetObject;

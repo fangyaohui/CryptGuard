@@ -3,6 +3,8 @@ package com.crypt.cryptguard.utils;
 import com.crypt.cryptguard.annotation.CryptTransient;
 import com.crypt.cryptguard.annotation.DecryptTransient;
 import com.crypt.cryptguard.annotation.EncryptTransient;
+import com.crypt.cryptguard.strategy.CryptStrategy;
+import com.crypt.cryptguard.strategy.CryptStrategyFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,11 +30,7 @@ public class JSONProcessorUtils {
     // 单例 ObjectMapper 实例，用于 JSON 解析和生成
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    // 加密字段的后缀标识
-    private static final String CRYPT_SUFFIX = "_crypt";
-
-    // AES 加密的私钥
-    private static final String PRIVATE_KEY = "fang";
+    private static final CryptStrategy cryptStrategy = CryptStrategyFactory.getStrategy();
 
     // 定义直接处理的基础类型集合
     private static final Set<Class<?>> BASE_TYPES = Set.of(
@@ -233,7 +231,11 @@ public class JSONProcessorUtils {
      * 处理字符串值，加密或解密。
      */
     private static String processValue(String value, boolean isEncrypt) {
-        return isEncrypt ? AESUtils.encode(value, PRIVATE_KEY) : AESUtils.decode(value, PRIVATE_KEY);
+        try{
+            return isEncrypt ? cryptStrategy.encrypt(value) : cryptStrategy.decrypt(value);
+        }catch (Exception exception){
+            return value;
+        }
     }
 
     /**
