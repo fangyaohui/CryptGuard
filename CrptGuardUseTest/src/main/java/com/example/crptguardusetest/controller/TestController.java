@@ -1,5 +1,6 @@
 package com.example.crptguardusetest.controller;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.crypt.cryptguard.annotation.*;
 import com.example.crptguardusetest.Entity.ComplexUser;
 import com.example.crptguardusetest.Entity.R;
@@ -72,7 +73,9 @@ public class TestController {
     @PostMapping("/decrypt/annotation/decryptControllerMethodRequest")
     public R<ComplexUser> decryptControllerMethodRequest(@RequestBody ComplexUser complexUser){
         log.info("decryptControllerMethodRequest params is {}",complexUser.toString());
-        UserInfoPO userInfoPO = userInfoService.getById(1);
+//        UserInfoPO userInfoPO = userInfoService.getById(1);
+        UserInfoPO userInfoPO = userInfoService.getOne(Wrappers.<UserInfoPO>lambdaQuery()
+                .eq(UserInfoPO::getUsername,"fang"));
         log.info("find user_info is : "+userInfoPO.toString());
         UserInfoPO tempUserInfo = new UserInfoPO();
         tempUserInfo.setUsername("fang"+ UUID.randomUUID());
